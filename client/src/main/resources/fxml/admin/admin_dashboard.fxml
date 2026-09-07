@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.admin.AdminDashboardController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Admin Bar -->
+    <top>
+        <HBox spacing="18.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <VBox spacing="3.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label fx:id="adminNameLabel" text="Administrator Command Center" styleClass="heading-1"/>
+                    <Label text="SYS_ADMIN" styleClass="badge-tag"/>
+                </HBox>
+                <Label text="System Telemetry, Route Allocations &amp; Facility Audits" styleClass="subtext"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="refreshButton" text="Sync Live Feed" onAction="#handleRefresh" styleClass="button-secondary"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Main Admin Overview -->
+    <center>
+        <VBox spacing="24.0">
+            <padding>
+                <Insets top="26.0" right="28.0" bottom="26.0" left="28.0"/>
+            </padding>
+
+            <!-- Key Metric Indicators -->
+            <HBox spacing="20.0">
+                <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="PENDING QUEUE" styleClass="heading-2"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Urgent" styleClass="badge-tag"/>
+                    </HBox>
+                    <Label fx:id="pendingPickupsCountLabel" text="-" styleClass="metric-value-warning"/>
+                    <Label text="Pickups awaiting collector dispatch" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="ACTIVE FLEET" styleClass="heading-2"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Online" styleClass="badge-tag"/>
+                    </HBox>
+                    <Label fx:id="activeCollectorsCountLabel" text="-" styleClass="metric-value-accent"/>
+                    <Label text="Collectors currently on active duty" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="TOTAL RECYCLED" styleClass="heading-2"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Audited" styleClass="badge-tag"/>
+                    </HBox>
+                    <Label fx:id="totalRecycledWeightLabel" text="0.0 kg" styleClass="metric-value"/>
+                    <Label text="Total e-waste diverted from landfill" styleClass="subtext"/>
+                </VBox>
+            </HBox>
+
+            <!-- Navigation Controls Hub -->
+            <VBox spacing="18.0" styleClass="card">
+                <VBox spacing="3.0">
+                    <Label text="Administrative Management Modules" styleClass="heading-1"/>
+                    <Label text="Direct access to operational scheduling, fleet allocations, facility processing, and reports." styleClass="subtext"/>
+                </VBox>
+                <Separator style="-fx-opacity: 0.1;"/>
+                <HBox spacing="16.0">
+                    <Button fx:id="managePickupsButton" text="Pickup Dispatch Management" onAction="#handleManagePickups" styleClass="button"/>
+                    <Button fx:id="manageCollectorsButton" text="Collector Fleet Controls" onAction="#handleManageCollectors" styleClass="button"/>
+                    <Button fx:id="inspectProcessingButton" text="Facility Inspection Workflows" onAction="#handleInspectProcessing" styleClass="button"/>
+                    <Button fx:id="viewAnalyticsButton" text="Environmental Analytics &amp; Reports" onAction="#handleViewAnalytics" styleClass="button-success"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>
