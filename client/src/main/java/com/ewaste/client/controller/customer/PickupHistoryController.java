@@ -1,119 +1,147 @@
-package com.ewaste.client.controller;
+package com.ewaste.client.controller.customer;
 
-import com.ewaste.client.dto.PickupClientResponse;
-import com.ewaste.client.network.ApiClient;
+import com.ewaste.client.api.PickupApiClient;
+import com.ewaste.client.config.ClientContext;
+import com.ewaste.client.controller.BaseController;
+import com.ewaste.client.dto.response.PickupClientResponse;
+import com.ewaste.client.navigation.AppScreen;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PickupHistoryController extends BaseController {
 
     @FXML
-    private TableView<PickupHistoryItem> tablePickups;
+    private TableView<PickupClientResponse> tblPickups;
     @FXML
-    private TableColumn<PickupHistoryItem, Long> colPickupId;
+    private TableColumn<PickupClientResponse, Number> colId;
     @FXML
-    private TableColumn<PickupHistoryItem, String> colDate;
+    private TableColumn<PickupClientResponse, String> colDate;
     @FXML
-    private TableColumn<PickupHistoryItem, String> colAddress;
+    private TableColumn<PickupClientResponse, String> colAddress;
     @FXML
-    private TableColumn<PickupHistoryItem, String> colStatus;
+    private TableColumn<PickupClientResponse, String> colStatus;
     @FXML
-    private TableColumn<PickupHistoryItem, Double> colWeight;
+    private TableColumn<PickupClientResponse, Number> colWeight;
     @FXML
-    private TableColumn<PickupHistoryItem, Double> colPriority;
+    private TableColumn<PickupClientResponse, Number> colPoints;
+    @FXML
+    private TableColumn<PickupClientResponse, Void> colActions;
+
     @FXML
     private ComboBox<String> cmbFilter;
     @FXML
     private TextField txtSearch;
     @FXML
-    private Button btnRefresh;
-    @FXML
     private Label lblTotalPickups;
     @FXML
-    private Label lblTotalWeight;
-    @FXML
     private ProgressIndicator progressIndicator;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private Button btnBack;
 
-    private ApiClient apiClient;
-    private List<PickupClientResponse> allPickups;
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private PickupApiClient pickupApiClient;
+    private ObservableList<PickupClientResponse> allPickups = FXCollections.observableArrayList();
+    private ObservableList<PickupClientResponse> filteredPickups = FXCollections.observableArrayList();
 
     @Override
     protected void onInitialize() {
-        apiClient = ClientContext.getInstance().getApiClient();
+        pickupApiClient = ClientContext.getInstance().getPickupApiClient();
 
-        // Setup table columns
-        setupTableColumns();
+        setupTable();
+        setupFilters();
+        loadPickups();
 
-        // Setup filter combo box
-        cmbFilter.getItems().addAll("All", "REQUESTED", "ASSIGNED", "COLLECTED",
-                "DELIVERED", "PROCESSING", "COMPLETED", "CANCELLED");
-        cmbFilter.setValue("All");
-
-        // Setup event handlers
-        cmbFilter.setOnAction(event -> applyFilters());
-        txtSearch.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
-        btnRefresh.setOnAction(event -> loadPickupHistory());
-
-        // Load data
-        loadPickupHistory();
-    }
-
-    private void setupTableColumns() {
-        colPickupId.setCellValueFactory(new PropertyValueFactory<>("pickupId"));
-        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
-        colAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colWeight.setCellValueFactory(new PropertyValueFactory<>("weight"));
-        colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
-
-        // Custom cell factory for status with color coding
-        colStatus.setCellFactory(column -> new TableCell<PickupHistoryItem, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    // Color code based on status
-                    String color = getStatusColor(item);
-                    setStyle("-fx-text-fill: " + color + "; -fx-font-weight: bold;");
-                }
-            }
-        });
-    }
-
-    private String getStatusColor(String status) {
-        switch (status.toUpperCase()) {
-            case "COMPLETED": return "#28a745"; // Green
-            case "CANCELLED": return "#dc3545"; // Red
-            case "PROCESSING": return "#ffc107"; // Yellow
-            case "COLLECTED": return "#17a2b8"; // Cyan
-            case "ASSIGNED": return "#007bff"; // Blue
-            default: return "#6c757d"; // Gray
+        // Set button actions
+        if (btnRefresh != null) {
+            btnRefresh.setOnAction(event -> handleRefresh());
+        }
+        if (btnBack != null) {
+            btnBack.setOnAction(event -> handleBack());
         }
     }
 
-    private void loadPickupHistory() {
+    private void setupTable() {
+        // ID column
+        colId.setCellValueFactory(cellData -> new SimpleLongProperty(cellData.getValue().getPickupId()));
+
+        // Date column - using scheduledDate or createdAt
+        colDate.setCellValueFactory(cellData -> {
+            String date = cellData.getValue().getScheduledDate();
+            if (date == null || date.isEmpty()) {
+                date = cellData.getValue().getCreatedAt();
+            }
+            return new SimpleStringProperty(date != null ? date : "-");
+        });
+
+        // Address column
+        colAddress.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getAddress() != null ?
+                        cellData.getValue().getAddress() : "-"));
+
+        // Status column
+        colStatus.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getCurrentState() != null ?
+                        cellData.getValue().getCurrentState() : "-"));
+
+        // Weight column - calculate total weight from items
+        colWeight.setCellValueFactory(cellData -> {
+            double totalWeight = 0.0;
+            List<PickupClientResponse.EWasteItemSummary> items = cellData.getValue().getItems();
+            if (items != null) {
+                totalWeight = items.stream()
+                        .mapToDouble(item -> item.getWeightKg() != null ? item.getWeightKg() : 0.0)
+                        .sum();
+            }
+            return new SimpleLongProperty((long) totalWeight);
+        });
+
+        // Points column - you can add this to your DTO or calculate from items
+        colPoints.setCellValueFactory(cellData -> {
+            // If your DTO has reward points, use it, otherwise show 0
+            return new SimpleLongProperty(0);
+        });
+
+        // Set up the table with filtered data
+        tblPickups.setItems(filteredPickups);
+    }
+
+    private void setupFilters() {
+        // Filter combo box
+        cmbFilter.setItems(FXCollections.observableArrayList(
+                "All", "PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"
+        ));
+        cmbFilter.setValue("All");
+        cmbFilter.setOnAction(event -> applyFilters());
+
+        // Search text field
+        txtSearch.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+    }
+
+    private void loadPickups() {
         setLoading(true);
 
         new Thread(() -> {
             try {
                 Long userId = userSession.getUserId();
-                allPickups = apiClient.getPickupsByUser(userId);
+                List<PickupClientResponse> pickups = pickupApiClient.getPickupsForCustomer(userId);
 
                 Platform.runLater(() -> {
                     setLoading(false);
-                    updateTable();
-                    updateStatistics();
+                    if (pickups != null) {
+                        allPickups.setAll(pickups);
+                        applyFilters();
+                        lblTotalPickups.setText("Total: " + allPickups.size());
+                    }
                 });
 
             } catch (Exception e) {
@@ -125,145 +153,66 @@ public class PickupHistoryController extends BaseController {
         }).start();
     }
 
-    private void updateTable() {
-        List<PickupHistoryItem> items = allPickups.stream()
-                .map(this::convertToHistoryItem)
-                .toList();
-
-        tablePickups.setItems(FXCollections.observableArrayList(items));
-    }
-
-    private PickupHistoryItem convertToHistoryItem(PickupClientResponse pickup) {
-        PickupHistoryItem item = new PickupHistoryItem();
-        item.setPickupId(pickup.getPickupId());
-
-        // Format date
-        if (pickup.getScheduledDate() != null) {
-            item.setDate(pickup.getScheduledDate());
-        }
-
-        item.setAddress(pickup.getAddress() != null ? pickup.getAddress() : "N/A");
-        item.setStatus(pickup.getCurrentState() != null ? pickup.getCurrentState() : "UNKNOWN");
-        item.setPriority(pickup.getPriorityScore() != null ? pickup.getPriorityScore() : 0.0);
-
-        // Calculate total weight
-        double weight = 0.0;
-        if (pickup.getItems() != null) {
-            weight = pickup.getItems().stream()
-                    .mapToDouble(i -> i.getWeightKg() != null ? i.getWeightKg() : 0.0)
-                    .sum();
-        }
-        item.setWeight(weight);
-
-        return item;
-    }
-
-    private void updateStatistics() {
-        lblTotalPickups.setText(String.valueOf(allPickups != null ? allPickups.size() : 0));
-
-        double totalWeight = 0.0;
-        if (allPickups != null) {
-            totalWeight = allPickups.stream()
-                    .filter(p -> "COMPLETED".equals(p.getCurrentState()))
-                    .mapToDouble(p -> {
-                        if (p.getItems() != null) {
-                            return p.getItems().stream()
-                                    .mapToDouble(i -> i.getWeightKg() != null ? i.getWeightKg() : 0.0)
-                                    .sum();
-                        }
-                        return 0.0;
-                    })
-                    .sum();
-        }
-        lblTotalWeight.setText(String.format("%.2f kg", totalWeight));
-    }
-
     private void applyFilters() {
         String filter = cmbFilter.getValue();
-        String search = txtSearch.getText().toLowerCase().trim();
+        String searchText = txtSearch.getText().toLowerCase();
 
-        if (allPickups == null) return;
-
-        List<PickupHistoryItem> filtered = allPickups.stream()
-                .map(this::convertToHistoryItem)
-                .filter(item -> {
-                    // Filter by status
-                    if (!"All".equals(filter) && !filter.equals(item.getStatus())) {
-                        return false;
+        List<PickupClientResponse> filtered = allPickups.stream()
+                .filter(pickup -> {
+                    // Apply status filter
+                    if (filter != null && !filter.equals("All")) {
+                        String status = pickup.getCurrentState();
+                        if (status == null || !status.equalsIgnoreCase(filter)) {
+                            return false;
+                        }
                     }
-                    // Filter by search
-                    if (!search.isEmpty()) {
-                        return item.getAddress().toLowerCase().contains(search) ||
-                                String.valueOf(item.getPickupId()).contains(search);
+                    // Apply search filter (search in address)
+                    if (searchText != null && !searchText.isEmpty()) {
+                        String address = pickup.getAddress();
+                        if (address == null || !address.toLowerCase().contains(searchText)) {
+                            return false;
+                        }
                     }
                     return true;
                 })
-                .toList();
+                .collect(Collectors.toList());
 
-        tablePickups.setItems(FXCollections.observableArrayList(filtered));
+        filteredPickups.setAll(filtered);
+        lblTotalPickups.setText("Total: " + filtered.size());
     }
 
     @FXML
-    private void handleViewDetails() {
-        PickupHistoryItem selected = tablePickups.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showWarning("No Selection", "Please select a pickup to view details.", "");
-            return;
-        }
+    private void handleRefresh() {
+        loadPickups();
+    }
 
-        // Navigate to pickup details view
-        // This would be implemented with a details screen
-        showInfo("Pickup Details",
-                "Pickup #" + selected.getPickupId(),
-                "Status: " + selected.getStatus() + "\n" +
-                        "Address: " + selected.getAddress() + "\n" +
-                        "Weight: " + String.format("%.2f", selected.getWeight()) + " kg\n" +
-                        "Priority: " + String.format("%.2f", selected.getPriority()));
+    @FXML
+    private void handleBack() {
+        navigateBack();
     }
 
     private void setLoading(boolean loading) {
-        progressIndicator.setVisible(loading);
-        tablePickups.setDisable(loading);
-        btnRefresh.setDisable(loading);
-    }
-
-    // Table item class
-    public static class PickupHistoryItem {
-        private Long pickupId;
-        private String date;
-        private String address;
-        private String status;
-        private Double weight;
-        private Double priority;
-
-        public Long getPickupId() { return pickupId; }
-        public void setPickupId(Long pickupId) { this.pickupId = pickupId; }
-        public String getDate() { return date; }
-        public void setDate(String date) { this.date = date; }
-        public String getAddress() { return address; }
-        public void setAddress(String address) { this.address = address; }
-        public String getStatus() { return status; }
-        public void setStatus(String status) { this.status = status; }
-        public Double getWeight() { return weight; }
-        public void setWeight(Double weight) { this.weight = weight; }
-        public Double getPriority() { return priority; }
-        public void setPriority(Double priority) { this.priority = priority; }
-    }
-
-    // Placeholder API interface
-    private interface ApiClient {
-        List<PickupClientResponse> getPickupsByUser(Long userId) throws Exception;
-    }
-
-    private static class ClientContext {
-        private static ClientContext instance = new ClientContext();
-
-        public static ClientContext getInstance() {
-            return instance;
+        if (progressIndicator != null) {
+            progressIndicator.setVisible(loading);
         }
-
-        public ApiClient getApiClient() {
-            return null;
+        if (btnRefresh != null) {
+            btnRefresh.setDisable(loading);
         }
+        if (btnBack != null) {
+            btnBack.setDisable(loading);
+        }
+    }
+
+    // Helper method to get status badge style class
+    private String getStatusStyleClass(String status) {
+        if (status == null) return "status-badge";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "status-badge-pending";
+            case "ASSIGNED" -> "status-badge-assigned";
+            case "IN_PROGRESS" -> "status-badge-in-progress";
+            case "COMPLETED" -> "status-badge-completed";
+            case "CANCELLED" -> "status-badge-cancelled";
+            default -> "status-badge";
+        };
     }
 }

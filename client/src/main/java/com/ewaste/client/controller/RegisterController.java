@@ -1,17 +1,20 @@
 package com.ewaste.client.controller;
 
-import com.ewaste.client.api.AppScreen;
-import com.ewaste.client.api.ClientContext;
-import com.ewaste.client.dto.response.AuthClientResponse;
+import com.ewaste.client.api.AuthApiClient;
+import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.dto.request.RegisterClientRequest;
-import com.ewaste.client.api.ApiClient;
+import com.ewaste.client.dto.response.AuthClientResponse;
+import com.ewaste.client.navigation.AppScreen;
+import com.ewaste.client.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-
-import java.awt.*;
-import java.io.IOException;
 
 public class RegisterController extends BaseController {
 
@@ -40,11 +43,11 @@ public class RegisterController extends BaseController {
     @FXML
     private VBox collectorFields;
 
-    private ApiClient apiClient;
+    private AuthApiClient authApiClient;
 
     @Override
     protected void onInitialize() {
-        apiClient = ClientContext.getInstance().getApiClient();
+        authApiClient = ClientContext.getInstance().getAuthApiClient();
 
         // Setup role combo box
         cmbRole.getItems().addAll("CUSTOMER", "COLLECTOR");
@@ -94,20 +97,13 @@ public class RegisterController extends BaseController {
             try {
                 RegisterClientRequest request = createRegistrationRequest();
 
-                AuthClientResponse response = apiClient.register(request);
+                AuthClientResponse response = authApiClient.register(request);
 
                 Platform.runLater(() -> {
                     setLoading(false);
                     handleRegistrationSuccess(response);
                 });
 
-            } catch (IOException e) {
-                Platform.runLater(() -> {
-                    setLoading(false);
-                    showError("Registration Failed", "Network Error",
-                            "Unable to connect to server. Please check your connection.\n\n" +
-                                    "Error: " + e.getMessage());
-                });
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     setLoading(false);

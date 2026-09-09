@@ -1,9 +1,12 @@
-package com.ewaste.client.controller;
+package com.ewaste.client.controller.customer;
 
-import com.ewaste.client.core.AppScreen;
-import com.ewaste.client.dto.AnalyticsClientResponse;
-import com.ewaste.client.dto.PickupClientResponse;
-import com.ewaste.client.network.ApiClient;
+import com.ewaste.client.api.PickupApiClient;
+import com.ewaste.client.api.RewardApiClient;
+import com.ewaste.client.config.ClientContext;
+import com.ewaste.client.controller.BaseController;
+import com.ewaste.client.dto.response.PickupClientResponse;
+import com.ewaste.client.dto.response.RewardClientResponse;
+import com.ewaste.client.navigation.AppScreen;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.chart.PieChart;
@@ -30,11 +33,14 @@ public class CustomerDashboardController extends BaseController {
     @FXML
     private VBox quickActions;
 
-    private ApiClient apiClient;
+    private PickupApiClient pickupApiClient;
+    private RewardApiClient rewardApiClient;
 
     @Override
     protected void onInitialize() {
-        apiClient = ClientContext.getInstance().getApiClient();
+        // Initialize specific API clients
+        pickupApiClient = ClientContext.getInstance().getPickupApiClient();
+        rewardApiClient = ClientContext.getInstance().getRewardApiClient();
 
         // Set welcome message
         String name = userSession.getFullName();
@@ -49,7 +55,6 @@ public class CustomerDashboardController extends BaseController {
 
     private void setupQuickActions() {
         // Add quick action buttons programmatically or use FXML bindings
-        // These would be defined in the FXML file
     }
 
     private void loadDashboardData() {
@@ -60,81 +65,59 @@ public class CustomerDashboardController extends BaseController {
             try {
                 Long userId = userSession.getUserId();
 
-                // Load user's reward balance
-                AnalyticsClientResponse rewardResponse = apiClient.getCustomerRewardSummary(userId);
-                int balance = rewardResponse != null && rewardResponse.getRewardCurrentBalance() != null ?
-                        rewardResponse.getRewardCurrentBalance() : 0;
+                // Load user's reward balance using RewardApiClient
+                RewardClientResponse rewardResponse = rewardApiClient.getRewardDetails(userId);
+                int balance = rewardResponse != null && rewardResponse.getBalance() != null ?
+                        rewardResponse.getBalance() : 0;
 
-                // Load user's pickups
-                List<PickupClientResponse> pickups = apiClient.getPickupsByUser(userId);
+                // Load user's pickups using PickupApiClient
+                List<PickupClientResponse> pickups = pickupApiClient.getPickupsForCustomer(userId);
 
-                // Count active pickups
+                // Count active pickups (not completed or cancelled)
                 long activePickups = pickups.stream()
-                        .filter(p -> !"COMPLETED".equals(p.getCurrentState()) &&
-                                !"CANCELLED".equals(p.getCurrentState()))
+                        .filter(PickupClientResponse::isActive)
                         .count();
 
-                // Calculate total recycled weight
+                // Calculate total recycled weight from completed pickups
                 double totalWeight = pickups.stream()
-                        .filter(p -> "COMPLETED".equals(p.getCurrentState()))
-                        .mapToDouble(p -> {
-                            if (p.getItems() != null) {
-                                return p.getItems().stream()
-                                        .mapToDouble(item -> item.getWeightKg() != null ? item.getWeightKg() : 0.0)
-                                        .sum();
-                            }
-                            return 0.0;
-                        })
+                        .filter(PickupClientResponse::isCompleted)
+                        .mapToDouble(PickupClientResponse::getTotalWeight)
                         .sum();
-
-                // Load notifications
-                List<String> notifications = apiClient.getNotifications(userId);
 
                 // Update UI on JavaFX thread
                 Platform.runLater(() -> {
                     setLoading(false);
-                    updateDashboard(balance, activePickups, totalWeight, notifications, pickups);
+                    updateDashboard(balance, activePickups, totalWeight);
                 });
 
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     setLoading(false);
-                    showErrorAsync("Error", "Failed to load dashboard data", e.getMessage());
+                    showError("Error", "Failed to load dashboard data", e.getMessage());
                 });
             }
         }).start();
     }
 
-    private void updateDashboard(int points, long activePickups, double totalWeight,
-                                 List<String> notifications, List<PickupClientResponse> pickups) {
+    private void updateDashboard(int points, long activePickups, double totalWeight) {
         // Update labels
         lblPoints.setText(String.valueOf(points));
         lblActivePickups.setText(String.valueOf(activePickups));
         lblTotalRecycled.setText(String.format("%.2f kg", totalWeight));
 
-        // Update notifications list
-        listNotifications.getItems().clear();
-        if (notifications != null && !notifications.isEmpty()) {
-            listNotifications.getItems().addAll(notifications);
-        } else {
-            listNotifications.getItems().add("No new notifications");
-        }
-
         // Update pie chart
-        updatePieChart(pickups);
+        updatePieChart();
     }
 
-    private void updatePieChart(List<PickupClientResponse> pickups) {
+    private void updatePieChart() {
         chartWasteCategories.getData().clear();
-
-        // Aggregate waste categories from completed pickups
-        // This is a simplified version - in production, you'd have category data from the server
 
         // Add sample data
         chartWasteCategories.getData().add(new PieChart.Data("Laptops", 30));
         chartWasteCategories.getData().add(new PieChart.Data("Batteries", 25));
         chartWasteCategories.getData().add(new PieChart.Data("Displays", 20));
-        chartWasteCategories.getData().add(new PieChart.Data("Other", 25));
+        chartWasteCategories.getData().add(new PieChart.Data("Circuit Boards", 15));
+        chartWasteCategories.getData().add(new PieChart.Data("Other", 10));
 
         // Style the chart
         chartWasteCategories.setTitle("Waste Categories");
@@ -165,22 +148,5 @@ public class CustomerDashboardController extends BaseController {
     private void setLoading(boolean loading) {
         // Show/hide loading indicator
         // This would be implemented with a progress indicator in the FXML
-    }
-
-    // Placeholder for ClientContext
-    private static class ClientContext {
-        private static ClientContext instance = new ClientContext();
-        private ApiClient apiClient;
-
-        public static ClientContext getInstance() {
-            return instance;
-        }
-
-        public ApiClient getApiClient() {
-            if (apiClient == null) {
-                // apiClient = new ApiClientImpl();
-            }
-            return apiClient;
-        }
     }
 }

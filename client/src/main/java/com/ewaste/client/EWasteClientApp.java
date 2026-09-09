@@ -1,8 +1,8 @@
 package com.ewaste.client;
 
 import com.ewaste.client.config.ApiConfig;
-import com.ewaste.client.navigation.AppScreen;
 import com.ewaste.client.config.ClientContext;
+import com.ewaste.client.navigation.AppScreen;
 import com.ewaste.client.navigation.SceneNavigator;
 import com.ewaste.client.session.UserSession;
 import javafx.application.Application;
@@ -14,18 +14,31 @@ import javafx.stage.Stage;
 public class EWasteClientApp extends Application {
 
     private static EWasteClientApp instance;
+    private Stage primaryStage;
 
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         instance = this;
 
         // Initialize application components
         ApiConfig.getInstance(); // Load config
         ClientContext.getInstance(); // Initialize context
-        SceneNavigator.getInstance().initialize(primaryStage);
+
+        // Set the primary stage in SceneNavigator
+        SceneNavigator.getInstance().setPrimaryStage(primaryStage);
+
+        // Set application title and min size
+        primaryStage.setTitle("E-Waste Collection App");
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(600);
 
         // Set application icon if available
-        // primaryStage.getIcons().add(new Image("/images/app-icon.png"));
+        // try {
+        //     primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app_icon.png")));
+        // } catch (Exception e) {
+        //     System.err.println("Could not load application icon: " + e.getMessage());
+        // }
 
         // Check if user has a valid session, otherwise navigate to login
         if (UserSession.getInstance().isAuthenticated()) {
@@ -33,6 +46,12 @@ public class EWasteClientApp extends Application {
         } else {
             SceneNavigator.getInstance().navigateTo(AppScreen.LOGIN);
         }
+
+        // Handle window close event
+        primaryStage.setOnCloseRequest(event -> {
+            // Clean up session if needed
+            UserSession.getInstance().endSession();
+        });
     }
 
     /**
@@ -57,6 +76,13 @@ public class EWasteClientApp extends Application {
      */
     public static EWasteClientApp getInstance() {
         return instance;
+    }
+
+    /**
+     * Get the primary stage
+     */
+    public Stage getPrimaryStage() {
+        return primaryStage;
     }
 
     public static void main(String[] args) {

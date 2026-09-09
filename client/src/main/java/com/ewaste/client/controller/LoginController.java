@@ -1,22 +1,24 @@
 package com.ewaste.client.controller;
 
-import com.ewaste.client.api.ApiConfig;
-import com.ewaste.client.api.AppScreen;
-import com.ewaste.client.api.ClientContext;
-import com.ewaste.client.session.UserSession;
-import com.ewaste.client.dto.response.AuthClientResponse;
+import com.ewaste.client.api.AuthApiClient;
+import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.dto.request.LoginClientRequest;
-import com.ewaste.client.network.ApiClient;
-import com.ewaste.client.network.ApiClientImpl;
+import com.ewaste.client.dto.response.AuthClientResponse;
+import com.ewaste.client.navigation.AppScreen;
+import com.ewaste.client.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
-import java.awt.*;
-import java.io.IOException;
+import java.util.prefs.Preferences;
 
 public class LoginController extends BaseController {
 
@@ -37,12 +39,16 @@ public class LoginController extends BaseController {
     @FXML
     private CheckBox chkRememberMe;
 
-    private ApiClient apiClient;
+    private AuthApiClient authApiClient;
+    private UserSession userSession;
 
     @Override
     protected void onInitialize() {
+        // Initialize user session
+        userSession = UserSession.getInstance();
+
         // Initialize API client
-        apiClient = ClientContext.getInstance().getApiClient();
+        authApiClient = ClientContext.getInstance().getAuthApiClient();
 
         // Setup event handlers
         setupEventHandlers();
@@ -102,7 +108,7 @@ public class LoginController extends BaseController {
                         txtPassword.getText().trim()
                 );
 
-                AuthClientResponse response = apiClient.login(request);
+                AuthClientResponse response = authApiClient.login(request);
 
                 // Update UI on JavaFX thread
                 Platform.runLater(() -> {
@@ -110,17 +116,10 @@ public class LoginController extends BaseController {
                     handleLoginSuccess(response);
                 });
 
-            } catch (IOException e) {
-                Platform.runLater(() -> {
-                    setLoading(false);
-                    showError("Login Failed", "Network Error",
-                            "Unable to connect to server. Please check your connection.\n\n" +
-                                    "Error: " + e.getMessage());
-                });
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     setLoading(false);
-                    showError("Login Failed", "Authentication Error",
+                    showDetailedError("Login Failed", "Authentication Error",
                             "Invalid email or password.\n\n" +
                                     "Please try again or register if you don't have an account.");
                 });
@@ -128,14 +127,14 @@ public class LoginController extends BaseController {
         }).start();
     }
 
-    private void handleLoginSuccess(AuthClientResponse response) {
+    private void handleLoginSuccess(AuthClientResponse authResponse) {
         // Start user session
         userSession.startSession(
-                response.getUserId(),
-                response.getFullName(),
-                response.getEmail(),
-                response.getRole(),
-                response.getToken()
+                authResponse.getUserId(),
+                authResponse.getFullName(),
+                authResponse.getEmail(),
+                authResponse.getRole(),
+                authResponse.getToken()
         );
 
         // Save credentials if remember me is checked
@@ -192,6 +191,12 @@ public class LoginController extends BaseController {
         lblError.getStyleClass().add("error-message");
     }
 
+    private void showDetailedError(String title, String subtitle, String message) {
+        lblError.setText(title + ": " + subtitle + " - " + message);
+        lblError.setVisible(true);
+        lblError.getStyleClass().add("error-message");
+    }
+
     private void clearError() {
         lblError.setText("");
         lblError.setVisible(false);
@@ -207,19 +212,25 @@ public class LoginController extends BaseController {
     }
 
     private void saveCredentials(String email) {
-        // In production, use secure storage (e.g., Preferences API with encryption)
-        // For now, we'll just store in memory
-        // Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
-        // prefs.put("remembered_email", email);
-        // prefs.putBoolean("remember_me", true);
+        try {
+            Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
+            prefs.put("remembered_email", email);
+            prefs.putBoolean("remember_me", true);
+        } catch (Exception e) {
+            // Log error but don't fail login
+            System.err.println("Could not save credentials: " + e.getMessage());
+        }
     }
 
     private void loadSavedCredentials() {
-        // In production, load from secure storage
-        // Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
-        // if (prefs.getBoolean("remember_me", false)) {
-        //     txtEmail.setText(prefs.get("remembered_email", ""));
-        //     chkRememberMe.setSelected(true);
-        // }
+        try {
+            Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
+            if (prefs.getBoolean("remember_me", false)) {
+                txtEmail.setText(prefs.get("remembered_email", ""));
+                chkRememberMe.setSelected(true);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load credentials: " + e.getMessage());
+        }
     }
 }

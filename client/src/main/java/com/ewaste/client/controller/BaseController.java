@@ -1,12 +1,14 @@
 package com.ewaste.client.controller;
 
-import com.ewaste.client.util.AlertHelper;
+import com.ewaste.client.navigation.AppScreen;
 import com.ewaste.client.navigation.SceneNavigator;
 import com.ewaste.client.session.UserSession;
+import com.ewaste.client.util.AlertHelper;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 /**
  * Base controller with common functionality for all controllers
@@ -15,6 +17,7 @@ public abstract class BaseController {
 
     protected UserSession userSession;
     protected SceneNavigator sceneNavigator;
+    protected Stage primaryStage;
 
     @FXML
     protected Label lblUserName;
@@ -26,6 +29,13 @@ public abstract class BaseController {
     public BaseController() {
         this.userSession = UserSession.getInstance();
         this.sceneNavigator = SceneNavigator.getInstance();
+    }
+
+    /**
+     * Set the primary stage reference
+     */
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
     }
 
     /**
@@ -56,7 +66,6 @@ public abstract class BaseController {
         if (lblUserRole != null) {
             String role = userSession.getRole();
             lblUserRole.setText(role != null ? role : "Unknown");
-            // Apply role-based styling
             if (role != null) {
                 lblUserRole.getStyleClass().add("role-" + role.toLowerCase());
             }
@@ -73,7 +82,7 @@ public abstract class BaseController {
     /**
      * Navigate to a specific screen
      */
-    protected void navigateTo(com.ewaste.client.core.AppScreen screen) {
+    protected void navigateTo(AppScreen screen) {
         sceneNavigator.navigateTo(screen);
     }
 
@@ -83,6 +92,34 @@ public abstract class BaseController {
     protected void navigateBack() {
         sceneNavigator.navigateBack();
     }
+
+    /**
+     * Check if user is authenticated, redirect to login if not
+     */
+    protected boolean checkAuthentication() {
+        if (!userSession.isAuthenticated()) {
+            navigateTo(AppScreen.LOGIN);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Check if user has required role
+     */
+    protected boolean checkRole(String requiredRole) {
+        if (!checkAuthentication()) {
+            return false;
+        }
+        if (!userSession.hasRole(requiredRole)) {
+            showError("Access Denied", "Insufficient Permissions",
+                    "You need " + requiredRole + " role to access this feature.");
+            return false;
+        }
+        return true;
+    }
+
+    // ========== ALERT METHODS ==========
 
     /**
      * Show information alert
@@ -140,35 +177,12 @@ public abstract class BaseController {
     protected void handleLogout() {
         if (showConfirmation("Logout", "Confirm Logout", "Are you sure you want to logout?")) {
             userSession.endSession();
-            navigateTo(com.ewaste.client.core.AppScreen.LOGIN);
+            sceneNavigator.clearHistory();
+            navigateTo(AppScreen.LOGIN);
         }
     }
 
-    /**
-     * Check if user is authenticated, redirect to login if not
-     */
-    protected boolean checkAuthentication() {
-        if (!userSession.isAuthenticated()) {
-            navigateTo(com.ewaste.client.core.AppScreen.LOGIN);
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Check if user has required role
-     */
-    protected boolean checkRole(String requiredRole) {
-        if (!checkAuthentication()) {
-            return false;
-        }
-        if (!userSession.hasRole(requiredRole)) {
-            showError("Access Denied", "Insufficient Permissions",
-                    "You need " + requiredRole + " role to access this feature.");
-            return false;
-        }
-        return true;
-    }
+    // ========== UTILITY METHODS ==========
 
     /**
      * Safe string conversion for nullable objects

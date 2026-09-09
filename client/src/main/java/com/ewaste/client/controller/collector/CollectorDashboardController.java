@@ -2,15 +2,13 @@ package com.ewaste.client.controller.collector;
 
 import com.ewaste.client.api.CollectorApiClient;
 import com.ewaste.client.api.PickupApiClient;
+import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.controller.BaseController;
 import com.ewaste.client.dto.response.CollectorClientResponse;
 import com.ewaste.client.dto.response.PickupClientResponse;
 import com.ewaste.client.navigation.AppScreen;
-import com.ewaste.client.navigation.SceneNavigator;
 import com.ewaste.client.session.UserSession;
-import com.ewaste.client.util.AlertHelper;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -21,88 +19,114 @@ import java.util.List;
 
 public class CollectorDashboardController extends BaseController {
 
-    @FXML private Label welcomeLabel;
-    @FXML private Label vehicleLabel;
-    @FXML private Label capacityLabel;
-    @FXML private Label activeTasksCountLabel;
-    @FXML private ToggleButton availabilityToggle;
-    @FXML private Button viewTasksButton;
-    @FXML private Button refreshButton;
-    @FXML private ProgressIndicator loadingIndicator;
+    @FXML
+    private Label welcomeLabel;
+    @FXML
+    private Label vehicleLabel;
+    @FXML
+    private Label capacityLabel;
+    @FXML
+    private Label activeTasksCountLabel;
+    @FXML
+    private ToggleButton availabilityToggle;
+    @FXML
+    private Button viewTasksButton;
+    @FXML
+    private Button refreshButton;
+    @FXML
+    private ProgressIndicator loadingIndicator;
 
-    private final CollectorApiClient collectorApiClient = new CollectorApiClient();
-    private final PickupApiClient pickupApiClient = new PickupApiClient();
+    private CollectorApiClient collectorApiClient;
+    private PickupApiClient pickupApiClient;
     private Long collectorId;
 
-    @FXML
-    public void initialize() {
-        validateSession();
-        long userId = UserSession.getInstance().getUserId();
-        welcomeLabel.setText("Welcome back, " + UserSession.getInstance().getFullName());
-        loadCollectorProfile(userId);
+    @Override
+    protected void onInitialize() {
+        collectorApiClient = ClientContext.getInstance().getCollectorApiClient();
+        pickupApiClient = ClientContext.getInstance().getPickupApiClient();
+
+        welcomeLabel.setText("Welcome back, " + userSession.getFullName());
+
+        // Setup availability toggle listener
+        availabilityToggle.setOnAction(event -> handleToggleAvailability());
+        viewTasksButton.setOnAction(event -> handleViewTasks());
+        refreshButton.setOnAction(event -> handleRefresh());
+
+        loadCollectorProfile();
     }
 
-    private void loadCollectorProfile(long userId) {
+    private void loadCollectorProfile() {
         setLoading(true);
-        Task<CollectorClientResponse> profileTask = new Task<>() {
-            @Override
-            protected CollectorClientResponse call() {
+        long userId = userSession.getUserId();
+
+        new Thread(() -> {
+            try {
                 List<CollectorClientResponse> collectors = collectorApiClient.getAllCollectors();
-                return collectors.stream()
+                CollectorClientResponse profile = collectors.stream()
                         .filter(c -> c.getUserId() != null && c.getUserId().equals(userId))
                         .findFirst()
                         .orElse(null);
+
+                Platform.runLater(() -> {
+                    if (profile != null) {
+                        collectorId = profile.getCollectorId();
+                        updateProfileUI(profile);
+                        loadActiveTaskMetrics(collectorId);
+                    } else {
+                        setLoading(false);
+                        showError("Profile Error", "Collector profile not found for the active user session.", "");
+                    }
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Network Failure", "Unable to retrieve profile.", e.getMessage());
+                });
             }
-        };
+        }).start();
+    }
 
-        profileTask.setOnSucceeded(event -> {
-            CollectorClientResponse profile = profileTask.getValue();
-            if (profile != null) {
-                collectorId = profile.getCollectorId();
-                vehicleLabel.setText("Vehicle: " + profile.getVehicleType());
-                capacityLabel.setText(String.format("Capacity: %.1f / %.1f kg",
-                        profile.getCurrentWorkloadKg(), profile.getMaxCapacityKg()));
-                availabilityToggle.setSelected(Boolean.TRUE.equals(profile.getIsAvailable()));
-                updateToggleText(availabilityToggle.isSelected());
-                loadActiveTaskMetrics(collectorId);
-            } else {
-                setLoading(false);
-                AlertHelper.showError("Profile Error", "Collector profile not found for the active user session.");
-            }
-        });
+    private void updateProfileUI(CollectorClientResponse profile) {
+        vehicleLabel.setText("Vehicle: " + (profile.getVehicleType() != null ? profile.getVehicleType() : "Not specified"));
 
-        profileTask.setOnFailed(event -> {
-            setLoading(false);
-            Throwable ex = profileTask.getException();
-            AlertHelper.showError("Network Failure", ex != null ? ex.getMessage() : "Unable to retrieve profile.");
-        });
+        double currentWorkload = profile.getCurrentWorkloadKg() != null ? profile.getCurrentWorkloadKg() : 0.0;
+        double maxCapacity = profile.getMaxCapacityKg() != null ? profile.getMaxCapacityKg() : 0.0;
+        capacityLabel.setText(String.format("Capacity: %.1f / %.1f kg", currentWorkload, maxCapacity));
 
-        new Thread(profileTask).start();
+        boolean isAvailable = Boolean.TRUE.equals(profile.getIsAvailable());
+        availabilityToggle.setSelected(isAvailable);
+        updateToggleText(isAvailable);
+
+        setLoading(false);
     }
 
     private void loadActiveTaskMetrics(long collectorId) {
-        Task<List<PickupClientResponse>> taskListTask = new Task<>() {
-            @Override
-            protected List<PickupClientResponse> call() {
-                return pickupApiClient.getPickupsForCollector(collectorId);
+        new Thread(() -> {
+            try {
+                List<PickupClientResponse> tasks = pickupApiClient.getPickupsForCollector(collectorId);
+
+                long activeCount = tasks != null ? tasks.stream()
+                        .filter(t -> {
+                            String status = t.getCurrentState();
+                            return "ASSIGNED".equalsIgnoreCase(status) ||
+                                    "COLLECTED".equalsIgnoreCase(status) ||
+                                    "IN_PROGRESS".equalsIgnoreCase(status);
+                        })
+                        .count() : 0;
+
+                Platform.runLater(() -> {
+                    activeTasksCountLabel.setText(String.valueOf(activeCount));
+                    setLoading(false);
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    activeTasksCountLabel.setText("-");
+                    setLoading(false);
+                });
             }
-        };
-
-        taskListTask.setOnSucceeded(event -> {
-            setLoading(false);
-            List<PickupClientResponse> tasks = taskListTask.getValue();
-            long activeCount = tasks != null ? tasks.stream()
-                    .filter(t -> "ASSIGNED".equalsIgnoreCase(t.getStatus()) || "COLLECTED".equalsIgnoreCase(t.getStatus()))
-                    .count() : 0;
-            activeTasksCountLabel.setText(String.valueOf(activeCount));
-        });
-
-        taskListTask.setOnFailed(event -> {
-            setLoading(false);
-            activeTasksCountLabel.setText("-");
-        });
-
-        new Thread(taskListTask).start();
+        }).start();
     }
 
     @FXML
@@ -115,27 +139,26 @@ public class CollectorDashboardController extends BaseController {
         updateToggleText(newState);
         setLoading(true);
 
-        Task<CollectorClientResponse> toggleTask = new Task<>() {
-            @Override
-            protected CollectorClientResponse call() {
-                return collectorApiClient.updateAvailability(collectorId, newState);
+        new Thread(() -> {
+            try {
+                CollectorClientResponse updated = collectorApiClient.updateCollectorAvailability(
+                        collectorId, newState);
+
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showInfo("Status Updated", "Your availability has been set to: " +
+                            (newState ? "Available" : "Unavailable"), "");
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    availabilityToggle.setSelected(!newState);
+                    updateToggleText(!newState);
+                    showError("Update Failed", "Failed to toggle status.", e.getMessage());
+                });
             }
-        };
-
-        toggleTask.setOnSucceeded(event -> {
-            setLoading(false);
-            AlertHelper.showInfo("Status Updated", "Your availability has been set to: " + (newState ? "Available" : "Unavailable"));
-        });
-
-        toggleTask.setOnFailed(event -> {
-            setLoading(false);
-            availabilityToggle.setSelected(!newState);
-            updateToggleText(!newState);
-            Throwable ex = toggleTask.getException();
-            AlertHelper.showError("Update Failed", ex != null ? ex.getMessage() : "Failed to toggle status.");
-        });
-
-        new Thread(toggleTask).start();
+        }).start();
     }
 
     private void updateToggleText(boolean isAvailable) {
@@ -144,13 +167,12 @@ public class CollectorDashboardController extends BaseController {
 
     @FXML
     private void handleViewTasks() {
-        SceneNavigator.loadScreen(AppScreen.COLLECTOR_ASSIGNED_TASKS);
+        navigateTo(AppScreen.ASSIGNED_TASKS);
     }
 
     @FXML
     private void handleRefresh() {
-        long userId = UserSession.getInstance().getUserId();
-        loadCollectorProfile(userId);
+        loadCollectorProfile();
     }
 
     private void setLoading(boolean isLoading) {
@@ -162,6 +184,9 @@ public class CollectorDashboardController extends BaseController {
         }
         if (availabilityToggle != null) {
             availabilityToggle.setDisable(isLoading);
+        }
+        if (viewTasksButton != null) {
+            viewTasksButton.setDisable(isLoading);
         }
     }
 }

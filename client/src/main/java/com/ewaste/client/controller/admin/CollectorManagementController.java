@@ -1,18 +1,17 @@
 package com.ewaste.client.controller.admin;
 
 import com.ewaste.client.api.CollectorApiClient;
+import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.controller.BaseController;
 import com.ewaste.client.dto.response.CollectorClientResponse;
 import com.ewaste.client.navigation.AppScreen;
-import com.ewaste.client.navigation.SceneNavigator;
-import com.ewaste.client.util.AlertHelper;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
@@ -20,39 +19,47 @@ import java.util.List;
 
 public class CollectorManagementController extends BaseController {
 
-    @FXML private TableView<CollectorClientResponse> collectorsTable;
-    @FXML private TableColumn<CollectorClientResponse, Number> idColumn;
-    @FXML private TableColumn<CollectorClientResponse, String> nameColumn;
-    @FXML private TableColumn<CollectorClientResponse, String> phoneColumn;
-    @FXML private TableColumn<CollectorClientResponse, String> areaColumn;
-    @FXML private TableColumn<CollectorClientResponse, String> vehicleColumn;
-    @FXML private TableColumn<CollectorClientResponse, Boolean> hazardousColumn;
-    @FXML private TableColumn<CollectorClientResponse, Boolean> availableColumn;
-    @FXML private TableColumn<CollectorClientResponse, Number> workloadColumn;
-    @FXML private TableColumn<CollectorClientResponse, Number> maxCapacityColumn;
-
-    @FXML private Button toggleAvailabilityButton;
-    @FXML private Button refreshButton;
-    @FXML private Button backButton;
-    @FXML private ProgressIndicator loadingIndicator;
-
-    private final CollectorApiClient collectorApiClient = new CollectorApiClient();
-    private final ObservableList<CollectorClientResponse> collectorData = FXCollections.observableArrayList();
+    @FXML
+    private TableView<CollectorClientResponse> collectorsTable;
+    @FXML
+    private TableColumn<CollectorClientResponse, Number> idColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, String> nameColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, String> emailColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, String> vehicleColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, Boolean> availableColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, Number> workloadColumn;
+    @FXML
+    private TableColumn<CollectorClientResponse, Number> maxCapacityColumn;
 
     @FXML
-    public void initialize() {
-        validateSession();
+    private Button toggleAvailabilityButton;
+    @FXML
+    private Button refreshButton;
+    @FXML
+    private Button backButton;
+    @FXML
+    private ProgressIndicator loadingIndicator;
+
+    private CollectorApiClient collectorApiClient;
+    private final ObservableList<CollectorClientResponse> collectorData = FXCollections.observableArrayList();
+
+    @Override
+    protected void onInitialize() {
+        collectorApiClient = ClientContext.getInstance().getCollectorApiClient();
         setupTable();
         loadCollectors();
     }
 
     private void setupTable() {
         idColumn.setCellValueFactory(c -> new SimpleLongProperty(c.getValue().getCollectorId()));
-        nameColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getName() != null ? c.getValue().getName() : "-"));
-        phoneColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPhone() != null ? c.getValue().getPhone() : "-"));
-        areaColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getArea()));
-        vehicleColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getVehicleType()));
-        hazardousColumn.setCellValueFactory(c -> new SimpleBooleanProperty(Boolean.TRUE.equals(c.getValue().getIsHazardousCapable())));
+        nameColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFullName() != null ? c.getValue().getFullName() : "-"));
+        emailColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmail() != null ? c.getValue().getEmail() : "-"));
+        vehicleColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getVehicleType() != null ? c.getValue().getVehicleType() : "-"));
         availableColumn.setCellValueFactory(c -> new SimpleBooleanProperty(Boolean.TRUE.equals(c.getValue().getIsAvailable())));
         workloadColumn.setCellValueFactory(c -> new SimpleDoubleProperty(
                 c.getValue().getCurrentWorkloadKg() != null ? c.getValue().getCurrentWorkloadKg() : 0.0));
@@ -72,53 +79,56 @@ public class CollectorManagementController extends BaseController {
     private void loadCollectors() {
         setLoading(true);
 
-        Task<List<CollectorClientResponse>> task = new Task<>() {
-            @Override
-            protected List<CollectorClientResponse> call() {
-                return collectorApiClient.getAllCollectors();
+        new Thread(() -> {
+            try {
+                List<CollectorClientResponse> collectors = collectorApiClient.getAllCollectors();
+
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    if (collectors != null) {
+                        collectorData.setAll(collectors);
+                    }
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Failure", "Could not fetch collector records.", e.getMessage());
+                });
             }
-        };
-
-        task.setOnSucceeded(e -> {
-            setLoading(false);
-            collectorData.setAll(task.getValue());
-        });
-
-        task.setOnFailed(e -> {
-            setLoading(false);
-            AlertHelper.showError("Failure", "Could not fetch collector records.");
-        });
-
-        new Thread(task).start();
+        }).start();
     }
 
     @FXML
     private void handleToggleAvailability() {
         CollectorClientResponse selected = collectorsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
+        if (selected == null) {
+            showWarning("No Selection", "Please select a collector to update.", "");
+            return;
+        }
 
         boolean updatedAvailability = !Boolean.TRUE.equals(selected.getIsAvailable());
         setLoading(true);
 
-        Task<CollectorClientResponse> toggleTask = new Task<>() {
-            @Override
-            protected CollectorClientResponse call() {
-                return collectorApiClient.updateAvailability(selected.getCollectorId(), updatedAvailability);
+        new Thread(() -> {
+            try {
+                CollectorClientResponse updated = collectorApiClient.updateCollectorAvailability(
+                        selected.getCollectorId(), updatedAvailability);
+
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showInfo("Updated", "Collector #" + selected.getCollectorId() +
+                            " is now " + (updatedAvailability ? "ACTIVE" : "INACTIVE"), "");
+                    loadCollectors();
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Update Failed", "Could not update collector status.", e.getMessage());
+                });
             }
-        };
-
-        toggleTask.setOnSucceeded(e -> {
-            setLoading(false);
-            AlertHelper.showInfo("Updated", "Collector #" + selected.getCollectorId() + " is now " + (updatedAvailability ? "ACTIVE" : "INACTIVE"));
-            loadCollectors();
-        });
-
-        toggleTask.setOnFailed(e -> {
-            setLoading(false);
-            AlertHelper.showError("Update Failed", toggleTask.getException().getMessage());
-        });
-
-        new Thread(toggleTask).start();
+        }).start();
     }
 
     @FXML
@@ -128,12 +138,13 @@ public class CollectorManagementController extends BaseController {
 
     @FXML
     private void handleBack() {
-        SceneNavigator.loadScreen(AppScreen.ADMIN_DASHBOARD);
+        navigateTo(AppScreen.ADMIN_DASHBOARD);
     }
 
     private void setLoading(boolean isLoading) {
         if (loadingIndicator != null) loadingIndicator.setVisible(isLoading);
         if (refreshButton != null) refreshButton.setDisable(isLoading);
         if (toggleAvailabilityButton != null && isLoading) toggleAvailabilityButton.setDisable(true);
+        if (backButton != null) backButton.setDisable(isLoading);
     }
 }
