@@ -1,6 +1,8 @@
 package com.ewaste.client.api;
 
 import com.ewaste.client.config.ApiConfig;
+import com.ewaste.client.dto.request.LoginClientRequest;
+import com.ewaste.client.dto.response.AuthClientResponse;
 import com.ewaste.client.session.UserSession;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -34,8 +36,137 @@ public abstract class ApiClient {
         this.objectMapper.registerModule(new JavaTimeModule());
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        this.baseUrl = ApiConfig.getBaseUrl();
+        this.baseUrl = ApiConfig.getInstance().getBaseUrl();
     }
+
+    // ========== SPECIFIC API METHODS ==========
+
+    /**
+     * Login user with email and password
+     */
+    public AuthClientResponse login(LoginClientRequest request) {
+        String endpoint = ApiConfig.getInstance().getLoginEndpoint();
+        return post(endpoint, request, AuthClientResponse.class);
+    }
+
+    /**
+     * Register a new user
+     */
+    public AuthClientResponse register(Object registerRequest) {
+        String endpoint = ApiConfig.getInstance().getRegisterEndpoint();
+        return post(endpoint, registerRequest, AuthClientResponse.class);
+    }
+
+    /**
+     * Validate JWT token
+     */
+    public boolean validateToken(String token) {
+        try {
+            String endpoint = ApiConfig.getInstance().getValidateTokenEndpoint();
+            // Temporarily set token for validation
+            String currentToken = UserSession.getInstance().getToken();
+            UserSession.getInstance().setToken(token);
+            try {
+                get(endpoint, Void.class);
+                return true;
+            } finally {
+                // Restore previous token
+                UserSession.getInstance().setToken(currentToken);
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get e-waste items
+     */
+    public <T> T getEWasteItems(Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getEWasteItemsEndpoint();
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get e-waste categories
+     */
+    public <T> T getEWasteCategories(Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getEWasteCategoriesEndpoint();
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get all pickups
+     */
+    public <T> T getPickups(Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getPickupsEndpoint();
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get pickup by ID
+     */
+    public <T> T getPickupById(Long pickupId, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getPickupByIdEndpoint(pickupId);
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Create a new pickup
+     */
+    public <T> T createPickup(Object pickupRequest, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getPickupsEndpoint();
+        return post(endpoint, pickupRequest, responseType);
+    }
+
+    /**
+     * Update pickup status
+     */
+    public <T> T updatePickup(Long pickupId, Object updateRequest, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getPickupByIdEndpoint(pickupId);
+        return patch(endpoint, updateRequest, responseType);
+    }
+
+    /**
+     * Get notifications for a user
+     */
+    public <T> T getNotifications(Long userId, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getNotificationsEndpoint(userId);
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get rewards for a customer
+     */
+    public <T> T getRewards(Long customerId, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getRewardsEndpoint(customerId);
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get reports summary (admin)
+     */
+    public <T> T getReportsSummary(Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getReportsSummaryEndpoint();
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get pickups reports (admin)
+     */
+    public <T> T getReportsPickups(Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getReportsPickupsEndpoint();
+        return get(endpoint, responseType);
+    }
+
+    /**
+     * Get collector performance
+     */
+    public <T> T getCollectorPerformance(Long collectorId, Class<T> responseType) {
+        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(collectorId);
+        return get(endpoint, responseType);
+    }
+
+    // ========== GENERIC HTTP METHODS ==========
 
     protected <T> T get(String endpoint, Class<T> responseType) {
         HttpRequest request = buildRequest(endpoint)
@@ -83,6 +214,8 @@ public abstract class ApiClient {
                 .build();
         return send(request, responseType);
     }
+
+    // ========== HELPER METHODS ==========
 
     private HttpRequest.Builder buildRequest(String endpoint) {
         String fullUrl = endpoint.startsWith("http") ? endpoint : baseUrl + endpoint;
@@ -141,6 +274,9 @@ public abstract class ApiClient {
                 var node = objectMapper.readTree(body);
                 if (node.has("message")) {
                     return node.get("message").asText();
+                }
+                if (node.has("error")) {
+                    return node.get("error").asText();
                 }
             } catch (Exception ignored) {
             }

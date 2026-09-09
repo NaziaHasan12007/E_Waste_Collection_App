@@ -20,7 +20,8 @@ public class PickupClientResponse {
 
     public PickupClientResponse() {}
 
-    // Getters and Setters
+    // ========== GETTERS AND SETTERS ==========
+
     public Long getPickupId() {
         return pickupId;
     }
@@ -125,7 +126,129 @@ public class PickupClientResponse {
         this.items = items;
     }
 
-    // Inner class for item summary
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Check if the pickup is active (not completed or cancelled)
+     */
+    public boolean isActive() {
+        return currentState != null &&
+                !"COMPLETED".equalsIgnoreCase(currentState) &&
+                !"CANCELLED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is completed
+     */
+    public boolean isCompleted() {
+        return "COMPLETED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is cancelled
+     */
+    public boolean isCancelled() {
+        return "CANCELLED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is pending
+     */
+    public boolean isPending() {
+        return "PENDING".equalsIgnoreCase(currentState) ||
+                "SUBMITTED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is assigned
+     */
+    public boolean isAssigned() {
+        return "ASSIGNED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is in progress
+     */
+    public boolean isInProgress() {
+        return "IN_PROGRESS".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is collected
+     */
+    public boolean isCollected() {
+        return "COLLECTED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Check if the pickup is delivered
+     */
+    public boolean isDelivered() {
+        return "DELIVERED".equalsIgnoreCase(currentState);
+    }
+
+    /**
+     * Get the status display name
+     */
+    public String getStatusDisplay() {
+        if (currentState == null) return "Unknown";
+        return switch (currentState.toUpperCase()) {
+            case "PENDING" -> "Pending";
+            case "SUBMITTED" -> "Submitted";
+            case "ASSIGNED" -> "Assigned";
+            case "IN_PROGRESS" -> "In Progress";
+            case "COLLECTED" -> "Collected";
+            case "DELIVERED" -> "Delivered";
+            case "COMPLETED" -> "Completed";
+            case "CANCELLED" -> "Cancelled";
+            default -> currentState;
+        };
+    }
+
+    /**
+     * Get the status badge style class for CSS styling
+     */
+    public String getStatusStyleClass() {
+        if (currentState == null) return "status-badge";
+        return switch (currentState.toUpperCase()) {
+            case "PENDING", "SUBMITTED" -> "status-badge-pending";
+            case "ASSIGNED" -> "status-badge-assigned";
+            case "IN_PROGRESS", "COLLECTED" -> "status-badge-in-progress";
+            case "DELIVERED", "COMPLETED" -> "status-badge-completed";
+            case "CANCELLED" -> "status-badge-cancelled";
+            default -> "status-badge";
+        };
+    }
+
+    /**
+     * Get the total weight of all items in this pickup
+     */
+    public double getTotalWeight() {
+        if (items == null || items.isEmpty()) {
+            return 0.0;
+        }
+        return items.stream()
+                .mapToDouble(item -> item.getWeightKg() != null ? item.getWeightKg() : 0.0)
+                .sum();
+    }
+
+    /**
+     * Get the number of items in this pickup
+     */
+    public int getItemCount() {
+        return items != null ? items.size() : 0;
+    }
+
+    /**
+     * Check if the pickup has any hazardous items
+     */
+    public boolean hasHazardousItems() {
+        if (items == null) return false;
+        return items.stream().anyMatch(item -> Boolean.TRUE.equals(item.getIsHazardous()));
+    }
+
+    // ========== INNER CLASS ==========
+
     public static class EWasteItemSummary {
         private Long itemId;
         private String modelName;
@@ -163,6 +286,7 @@ public class PickupClientResponse {
                 ", priorityScore=" + priorityScore +
                 ", createdAt='" + createdAt + '\'' +
                 ", itemIds=" + itemIds +
+                ", items=" + (items != null ? items.size() : 0) + " items" +
                 '}';
     }
 }

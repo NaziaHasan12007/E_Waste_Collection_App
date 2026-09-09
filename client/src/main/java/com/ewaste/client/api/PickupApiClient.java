@@ -1,5 +1,6 @@
 package com.ewaste.client.api;
 
+import com.ewaste.client.config.ApiConfig;
 import com.ewaste.client.dto.request.CreatePickupClientRequest;
 import com.ewaste.client.dto.response.PickupClientResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,7 +16,19 @@ import java.util.Map;
  */
 public class PickupApiClient extends ApiClient {
 
+    private static PickupApiClient instance;
     private static final String BASE_PATH = "/api/v1/pickups";
+
+    private PickupApiClient() {
+        super();
+    }
+
+    public static PickupApiClient getInstance() {
+        if (instance == null) {
+            instance = new PickupApiClient();
+        }
+        return instance;
+    }
 
     public PickupClientResponse createPickup(CreatePickupClientRequest request) {
         return post(BASE_PATH, request, PickupClientResponse.class);
@@ -61,5 +74,27 @@ public class PickupApiClient extends ApiClient {
 
     public PickupClientResponse cancelPickup(long pickupId) {
         return updateState(pickupId, "CANCEL", null);
+    }
+
+    // ========== ADDITIONAL HELPER METHODS ==========
+
+    public List<PickupClientResponse> getActivePickupsForCustomer(long customerId) {
+        List<PickupClientResponse> allPickups = getPickupsForCustomer(customerId);
+        if (allPickups == null) return Collections.emptyList();
+        return allPickups.stream()
+                .filter(p -> p.isActive())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<PickupClientResponse> getCompletedPickupsForCustomer(long customerId) {
+        List<PickupClientResponse> allPickups = getPickupsForCustomer(customerId);
+        if (allPickups == null) return Collections.emptyList();
+        return allPickups.stream()
+                .filter(p -> p.isCompleted())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<PickupClientResponse> getPickupsByStatus(String status) {
+        return getAllPickups(status);
     }
 }

@@ -1,33 +1,46 @@
 package com.ewaste.client.api;
 
 import com.ewaste.client.dto.response.CollectorClientResponse;
+import com.ewaste.client.config.ApiConfig;
+import java.util.List;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Client for collector discovery and availability configuration (/api/v1/collectors).
- */
 public class CollectorApiClient extends ApiClient {
 
-    private static final String BASE_PATH = "/api/v1/collectors";
+    private static CollectorApiClient instance;
+
+    private CollectorApiClient() {
+        super();
+    }
+
+    public static CollectorApiClient getInstance() {
+        if (instance == null) {
+            instance = new CollectorApiClient();
+        }
+        return instance;
+    }
+
+    public CollectorClientResponse getCollectorProfile(Long collectorId) {
+        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(collectorId);
+        return get(endpoint, CollectorClientResponse.class);
+    }
 
     public List<CollectorClientResponse> getAllCollectors() {
-        return get(BASE_PATH, new TypeReference<List<CollectorClientResponse>>() {});
+        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(0L)
+                .replace("/0", ""); // Adjust this based on your actual endpoint
+        return get(endpoint, new TypeReference<List<CollectorClientResponse>>() {});
     }
 
-    public List<CollectorClientResponse> getAvailableCollectors() {
-        return get(BASE_PATH + "/available", new TypeReference<List<CollectorClientResponse>>() {});
+    public CollectorClientResponse updateCollectorAvailability(Long collectorId, boolean available) {
+        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(collectorId) + "/availability";
+        return patch(endpoint, new AvailabilityRequest(available), CollectorClientResponse.class);
     }
 
-    public CollectorClientResponse getCollectorById(long collectorId) {
-        return get(BASE_PATH + "/" + collectorId, CollectorClientResponse.class);
-    }
-
-    public CollectorClientResponse updateAvailability(long collectorId, boolean available) {
-        Map<String, Boolean> payload = Collections.singletonMap("available", available);
-        return patch(BASE_PATH + "/" + collectorId + "/availability", payload, CollectorClientResponse.class);
+    // Inner class for availability update
+    private static class AvailabilityRequest {
+        private boolean available;
+        public AvailabilityRequest(boolean available) { this.available = available; }
+        public boolean isAvailable() { return available; }
+        public void setAvailable(boolean available) { this.available = available; }
     }
 }
