@@ -12,6 +12,7 @@ public class ProcessingRecord {
 
     private Long recordId;
     private Long pickupId;
+    private Long itemId;
     private PickupRequest pickup;
     private Long centerId;
     private RecyclingCenter recyclingCenter;
@@ -19,6 +20,7 @@ public class ProcessingRecord {
     private Integer pointsAwarded;
     private String processingStatus;
     private String notes;
+    private ProcessingResult processingResult;
     private Double actualWeightKg;
     private Double carbonCreditsEarned;
     private LocalDateTime processedAt;
@@ -57,6 +59,14 @@ public class ProcessingRecord {
 
     public void setPickupId(Long pickupId) {
         this.pickupId = pickupId;
+    }
+
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
     public PickupRequest getPickup() {
@@ -119,6 +129,25 @@ public class ProcessingRecord {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getInspectionNotes() {
+        return notes;
+    }
+
+    public void setInspectionNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public ProcessingResult getProcessingResult() {
+        return processingResult;
+    }
+
+    public void setProcessingResult(ProcessingResult processingResult) {
+        this.processingResult = processingResult;
+        if (processingResult != null) {
+            this.workflowType = processingResult.name();
+        }
     }
 
     public Double getActualWeightKg() {

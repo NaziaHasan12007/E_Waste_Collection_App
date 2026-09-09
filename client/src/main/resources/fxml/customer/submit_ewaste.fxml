@@ -10,7 +10,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.ewaste.client.controller.customer.SubmitEWasteController"
-            styleClass="root" prefWidth="800" prefHeight="600">
+            styleClass="root" prefWidth="800" prefHeight="600"
+            stylesheets="@../../css/admin.css">
 
     <top>
         <VBox styleClass="card-top-bar" spacing="10">
@@ -71,10 +72,11 @@
                         <ComboBox fx:id="cmbCondition" styleClass="text-field" promptText="Select condition">
                             <items>
                                 <FXCollections fx:factory="observableArrayList">
-                                    <String fx:value="GOOD"/>
-                                    <String fx:value="FAIR"/>
-                                    <String fx:value="POOR"/>
-                                    <String fx:value="BROKEN"/>
+                                    <String fx:value="WORKING"/>
+                                    <String fx:value="MINOR_DAMAGE"/>
+                                    <String fx:value="MAJOR_DAMAGE"/>
+                                    <String fx:value="NON_FUNCTIONAL"/>
+                                    <String fx:value="SCRAP_ONLY"/>
                                 </FXCollections>
                             </items>
                         </ComboBox>
@@ -87,6 +89,50 @@
                                   styleClass="text-field" prefHeight="80" wrapText="true"/>
                     </VBox>
 
+                    <CheckBox fx:id="chkHazardous" text="This item may contain hazardous materials"
+                              styleClass="check-box"/>
+
+                    <HBox spacing="20">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Pickup Address" styleClass="subtext"/>
+                            <TextField fx:id="txtAddress" promptText="Enter the collection address"
+                                       styleClass="text-field"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="20">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Preferred Date" styleClass="subtext"/>
+                            <DatePicker fx:id="dpkPreferredDate" styleClass="text-field"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Preferred Time" styleClass="subtext"/>
+                            <ComboBox fx:id="cmbPreferredTime" styleClass="text-field"
+                                      promptText="Select a time"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="8" styleClass="card">
+                        <Label text="Items in this pickup" styleClass="heading-2"/>
+                        <ListView fx:id="listItems" prefHeight="110" styleClass="table-view"/>
+                        <HBox spacing="20">
+                            <Label text="Items:" styleClass="subtext"/>
+                            <Label fx:id="lblItemCount" text="0" styleClass="metric-value-accent"/>
+                            <Label text="Total weight:" styleClass="subtext"/>
+                            <Label fx:id="lblTotalWeight" text="0.00 kg" styleClass="metric-value"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="btnRemoveItem" text="Remove Selected"
+                                    styleClass="button-secondary" onAction="#handleRemoveItem"/>
+                            <Button fx:id="btnClearAll" text="Clear All"
+                                    styleClass="button-secondary" onAction="#handleClearAll"/>
+                        </HBox>
+                    </VBox>
+
+                    <HBox spacing="15" alignment="CENTER">
+                        <Button fx:id="btnAddItem" text="Add Item" styleClass="button"
+                                prefWidth="150" onAction="#handleAddItem"/>
+                    </HBox>
+
                     <!-- Estimated Points -->
                     <HBox alignment="CENTER_LEFT" spacing="20" styleClass="card">
                         <Label text="Estimated Points:" styleClass="heading-2"/>
@@ -95,8 +141,10 @@
 
                     <!-- Submit Button -->
                     <HBox spacing="15" alignment="CENTER">
-                        <Button text="Submit" styleClass="button-success" prefHeight="44" prefWidth="200"
+                        <Button fx:id="btnSubmit" text="Submit" styleClass="button-success" prefHeight="44" prefWidth="200"
                                 onAction="#handleSubmit"/>
+                        <Button fx:id="btnCancel" text="Back" styleClass="button-secondary" prefHeight="44" prefWidth="100"
+                                onAction="#handleBack"/>
                         <Button text="Clear" styleClass="button-secondary" prefHeight="44" prefWidth="100"
                                 onAction="#handleClear"/>
                     </HBox>

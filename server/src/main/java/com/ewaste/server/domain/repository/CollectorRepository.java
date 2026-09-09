@@ -31,45 +31,64 @@ public interface CollectorRepository {
     /**
      * Find all available collectors
      */
-    List<Collector> findAvailable();
+    default List<Collector> findAvailable() {
+        return findByAvailability(true);
+    }
+
+    List<Collector> findByAvailability(boolean available);
+
+    Collector update(Collector collector);
 
     /**
      * Find all collectors by vehicle type
      */
-    List<Collector> findByVehicleType(VehicleType vehicleType);
+    default List<Collector> findByVehicleType(VehicleType vehicleType) {
+        return findAll().stream().filter(c -> c.getVehicleType() == vehicleType).toList();
+    }
 
     /**
      * Find collectors with capacity greater than specified weight
      */
-    List<Collector> findAvailableWithCapacity(double weightKg);
+    default List<Collector> findAvailableWithCapacity(double weightKg) {
+        return findAvailable().stream().filter(c -> c.canAcceptPickup(weightKg)).toList();
+    }
 
     /**
      * Update collector availability
      */
-    void updateAvailability(Long collectorId, boolean isAvailable);
+    default void updateAvailability(Long collectorId, boolean isAvailable) {
+    }
 
     /**
      * Update collector workload
      */
-    void updateWorkload(Long collectorId, double workloadKg);
+    default void updateWorkload(Long collectorId, double workloadKg) {
+    }
 
     /**
      * Delete a collector by ID
      */
-    void deleteById(Long collectorId);
+    default void deleteById(Long collectorId) {
+    }
 
     /**
      * Check if a collector exists by user ID
      */
-    boolean existsByUserId(Long userId);
+    default boolean existsByUserId(Long userId) {
+        return findByUserId(userId).isPresent();
+    }
 
     /**
      * Get total number of collectors
      */
-    long count();
+    default long count() {
+        return findAll().size();
+    }
 
     /**
      * Get count of available collectors
      */
-    long countAvailable();
+    default long countAvailable() {
+        return findAvailable().size();
+    }
 }

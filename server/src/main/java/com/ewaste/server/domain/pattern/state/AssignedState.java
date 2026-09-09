@@ -14,6 +14,14 @@ public class AssignedState implements PickupState {
     }
 
     @Override
+    public void assign(PickupRequest context, Long collectorId) {
+        if (collectorId == null || collectorId <= 0) {
+            throw new IllegalArgumentException("A valid collector ID must be provided to assign a pickup.");
+        }
+        context.setCollectorId(collectorId);
+    }
+
+    @Override
     public void collect(PickupRequest context) {
         context.setState(new CollectedState());
     }

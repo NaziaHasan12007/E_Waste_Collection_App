@@ -12,8 +12,6 @@ import com.ewaste.client.session.UserSession;
 public class AuthApiClient extends ApiClient {
 
     private static AuthApiClient instance;
-    private static final String BASE_PATH = "/api/v1/auth";
-
     private AuthApiClient() {
         super();
     }
@@ -27,15 +25,15 @@ public class AuthApiClient extends ApiClient {
 
     public AuthClientResponse login(String email, String password) {
         LoginClientRequest request = new LoginClientRequest(email, password);
-        return post(BASE_PATH + "/login", request, AuthClientResponse.class);
+        return post(ApiConfig.getInstance().getLoginEndpoint(), request, AuthClientResponse.class);
     }
 
     public AuthClientResponse login(LoginClientRequest request) {
-        return post(BASE_PATH + "/login", request, AuthClientResponse.class);
+        return post(ApiConfig.getInstance().getLoginEndpoint(), request, AuthClientResponse.class);
     }
 
     public AuthClientResponse register(RegisterClientRequest request) {
-        return post(BASE_PATH + "/register", request, AuthClientResponse.class);
+        return post(ApiConfig.getInstance().getRegisterEndpoint(), request, AuthClientResponse.class);
     }
 
     // ========== ADDITIONAL HELPER METHODS ==========

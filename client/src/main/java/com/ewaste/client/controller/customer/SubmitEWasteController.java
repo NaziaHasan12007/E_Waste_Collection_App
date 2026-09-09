@@ -7,6 +7,7 @@ import com.ewaste.client.controller.BaseController;
 import com.ewaste.client.dto.request.CreatePickupClientRequest;
 import com.ewaste.client.dto.request.EWasteItemClientRequest;
 import com.ewaste.client.dto.response.EWasteCategoryClientResponse;
+import com.ewaste.client.dto.response.EWasteItemClientResponse;
 import com.ewaste.client.dto.response.PickupClientResponse;
 import com.ewaste.client.navigation.AppScreen;
 import javafx.application.Platform;
@@ -76,8 +77,9 @@ public class SubmitEWasteController extends BaseController {
         pickupApiClient = ClientContext.getInstance().getPickupApiClient();
 
         // Setup condition combo box
-        cmbCondition.getItems().addAll("GOOD", "FAIR", "POOR", "BROKEN");
-        cmbCondition.setValue("GOOD");
+        cmbCondition.getItems().setAll("WORKING", "MINOR_DAMAGE", "MAJOR_DAMAGE",
+                "NON_FUNCTIONAL", "SCRAP_ONLY");
+        cmbCondition.setValue("WORKING");
 
         // Setup time combo box
         cmbPreferredTime.getItems().addAll(
@@ -230,7 +232,23 @@ public class SubmitEWasteController extends BaseController {
                 request.setPreferredDate(dpkPreferredDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
                 request.setPreferredTime(cmbPreferredTime.getValue());
 
-                // Submit the pickup with items
+                List<Long> itemIds = new ArrayList<>();
+                for (EWasteItemClientRequest item : items) {
+                    int quantity = item.getQuantity() != null ? item.getQuantity() : 1;
+                    for (int i = 0; i < quantity; i++) {
+                        EWasteItemClientRequest persistedItem = new EWasteItemClientRequest();
+                        persistedItem.setCategoryId(item.getCategoryId());
+                        persistedItem.setName(item.getName());
+                        persistedItem.setWeightKg(item.getWeightKg());
+                        persistedItem.setCondition(item.getCondition());
+                        persistedItem.setDescription(item.getDescription());
+                        persistedItem.setHazardous(item.getHazardous());
+                        EWasteItemClientResponse savedItem = eWasteApiClient.submitItem(persistedItem);
+                        itemIds.add(savedItem.getId());
+                    }
+                }
+                request.setItemIds(itemIds);
+
                 PickupClientResponse response = pickupApiClient.createPickup(request);
 
                 Platform.runLater(() -> {
@@ -354,7 +372,7 @@ public class SubmitEWasteController extends BaseController {
         txtWeight.clear();
         txtQuantity.clear();
         chkHazardous.setSelected(false);
-        cmbCondition.setValue("GOOD");
+        cmbCondition.setValue("WORKING");
         txtDescription.clear();
         lblEstimatedPoints.setText("0");
         txtItemName.requestFocus();

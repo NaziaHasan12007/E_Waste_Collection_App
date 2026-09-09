@@ -25,7 +25,7 @@ public class RewardApiClient extends ApiClient {
     }
 
     public RewardClientResponse getRewardDetails(Long userId) {
-        String endpoint = ApiConfig.getInstance().getRewardsEndpoint(userId) + "/details";
+        String endpoint = ApiConfig.getInstance().getRewardsEndpoint(userId);
         return get(endpoint, RewardClientResponse.class);
     }
 }

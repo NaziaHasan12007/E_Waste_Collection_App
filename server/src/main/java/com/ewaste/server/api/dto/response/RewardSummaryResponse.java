@@ -56,6 +56,18 @@ public class RewardSummaryResponse {
         this.points = points;
     }
 
+    public Long getCustomerId() {
+        return userId;
+    }
+
+    public Integer getPointsEarned() {
+        return points;
+    }
+
+    public Integer getBalance() {
+        return points;
+    }
+
     public String getCalculationBasis() {
         return calculationBasis;
     }

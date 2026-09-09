@@ -26,7 +26,11 @@ public interface ProcessingRecordRepository {
     /**
      * Find processing records by pickup ID
      */
-    List<ProcessingRecord> findByPickupId(Long pickupId);
+    default List<ProcessingRecord> findByPickupId(Long pickupId) {
+        return findAll().stream()
+                .filter(r -> pickupId != null && pickupId.equals(r.getPickupId()))
+                .toList();
+    }
 
     /**
      * Find processing records by center ID
@@ -36,60 +40,88 @@ public interface ProcessingRecordRepository {
     /**
      * Find processing records by workflow type
      */
-    List<ProcessingRecord> findByWorkflowType(String workflowType);
+    default List<ProcessingRecord> findByWorkflowType(String workflowType) {
+        return findAll().stream()
+                .filter(r -> workflowType != null && workflowType.equalsIgnoreCase(r.getWorkflowType()))
+                .toList();
+    }
 
     /**
      * Find processing records by status
      */
-    List<ProcessingRecord> findByStatus(String status);
+    default List<ProcessingRecord> findByStatus(String status) {
+        return findAll().stream()
+                .filter(r -> status != null && status.equalsIgnoreCase(r.getProcessingStatus()))
+                .toList();
+    }
 
     /**
      * Find processing records by date range
      */
-    List<ProcessingRecord> findByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    default List<ProcessingRecord> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        return findAll().stream()
+                .filter(r -> r.getProcessedAt() != null
+                        && !r.getProcessedAt().isBefore(startDate)
+                        && !r.getProcessedAt().isAfter(endDate))
+                .toList();
+    }
 
     /**
      * Find completed processing records
      */
-    List<ProcessingRecord> findCompleted();
+    default List<ProcessingRecord> findCompleted() {
+        return findByStatus("COMPLETED");
+    }
 
     /**
      * Find pending processing records
      */
-    List<ProcessingRecord> findPending();
+    default List<ProcessingRecord> findPending() {
+        return findByStatus("PENDING");
+    }
 
     /**
      * Update processing record status
      */
-    void updateStatus(Long recordId, String status);
+    default void updateStatus(Long recordId, String status) {
+    }
 
     /**
      * Update points awarded
      */
-    void updatePointsAwarded(Long recordId, int pointsAwarded);
+    default void updatePointsAwarded(Long recordId, int pointsAwarded) {
+    }
 
     /**
      * Delete a processing record by ID
      */
-    void deleteById(Long recordId);
+    default void deleteById(Long recordId) {
+    }
 
     /**
      * Delete processing records by pickup ID
      */
-    void deleteByPickupId(Long pickupId);
+    default void deleteByPickupId(Long pickupId) {
+    }
 
     /**
      * Count records by status
      */
-    long countByStatus(String status);
+    default long countByStatus(String status) {
+        return findByStatus(status).size();
+    }
 
     /**
      * Get total points awarded for a customer
      */
-    int getTotalPointsByCustomerId(Long customerId);
+    default int getTotalPointsByCustomerId(Long customerId) {
+        return 0;
+    }
 
     /**
      * Get total carbon credits earned by a customer
      */
-    double getTotalCarbonCreditsByCustomerId(Long customerId);
+    default double getTotalCarbonCreditsByCustomerId(Long customerId) {
+        return 0.0;
+    }
 }

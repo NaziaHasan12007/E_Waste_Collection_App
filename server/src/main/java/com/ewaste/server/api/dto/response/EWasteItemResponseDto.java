@@ -7,6 +7,7 @@ public class EWasteItemResponseDto {
     private Double weightKg;
     private Boolean isHazardous;
     private String wasteCondition;
+    private String description;
     private String specificAttributes;
 
     // Constructors
@@ -46,6 +47,9 @@ public class EWasteItemResponseDto {
 
     public String getWasteCondition() { return wasteCondition; }
     public void setWasteCondition(String wasteCondition) { this.wasteCondition = wasteCondition; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public String getSpecificAttributes() { return specificAttributes; }
     public void setSpecificAttributes(String specificAttributes) { this.specificAttributes = specificAttributes; }

@@ -35,7 +35,7 @@ public class PickupService {
     }
 
     public List<PickupRequest> findByUserId(Long userId) {
-        return pickupRepository.findByUserId(userId);
+        return pickupRepository.findByCustomerId(userId);
     }
 
     public List<PickupRequest> findByCollectorId(Long collectorId) {

@@ -72,26 +72,17 @@ public class PickupFacade {
         pickup.setPriorityScore(priorityScore);
         log.debug("Computed priority score: {}", priorityScore);
 
-        // 2. Dynamic Collector Allocation
-        List<Collector> availableCollectors = collectorRepository.findByAvailability(true);
-        Optional<Collector> selectedCollector = assignmentStrategy.selectCollector(pickup, availableCollectors);
-
-        if (selectedCollector.isPresent()) {
-            Collector collector = selectedCollector.get();
-            pickup.assign(collector.getCollectorId());
-            collector.setCurrentWorkloadKg(collector.getCurrentWorkloadKg() + 5.0);
-            collectorRepository.update(collector);
-            log.info("Assigned collector {} to pickup", collector.getCollectorId());
-        } else {
+        // 2. New requests remain queued until an administrator assigns a collector.
+        if (pickup.getStatus() == PickupStatus.SUBMITTED) {
             pickup.request();
-            log.info("No collector immediately available; queued in REQUESTED state");
         }
+        log.info("Pickup queued in REQUESTED state for administrator assignment");
 
         // 3. Persist entity
         PickupRequest saved = pickupService.save(pickup);
 
         // 4. Publish Observer Event
-        eventPublisher.publish(new PickupEvent(saved, PickupStatus.SUBMITTED, "Pickup created and queued."));
+        eventPublisher.publish(new PickupEvent(saved, saved.getStatus(), "Pickup created and queued."));
 
         return pickupMapper.toResponseDto(saved);
     }
@@ -101,13 +92,22 @@ public class PickupFacade {
         PickupStatus oldStatus = pickup.getStatus();
 
         switch (action.toUpperCase()) {
-            case "COLLECT" -> pickup.collect();
-            case "DELIVER" -> {
+            case "ASSIGN" -> {
+                if (paramId == null) {
+                    throw new BusinessRuleException("Collector ID required for assignment.");
+                }
+                if (pickup.getStatus() == PickupStatus.SUBMITTED) {
+                    pickup.request();
+                }
+                pickup.assign(paramId);
+            }
+            case "COLLECT", "COLLECTED" -> pickup.collect();
+            case "DELIVER", "DELIVERED" -> {
                 if (paramId == null) throw new BusinessRuleException("Recycling Center ID required for delivery.");
                 pickup.deliver(paramId);
             }
-            case "PROCESS" -> pickup.process();
-            case "COMPLETE" -> pickup.complete();
+            case "PROCESS", "PROCESSING" -> pickup.process();
+            case "COMPLETE", "COMPLETED" -> pickup.complete();
             case "CANCEL" -> pickup.cancel();
             default -> throw new BusinessRuleException("Unknown state transition action: " + action);
         }

@@ -1,8 +1,9 @@
 package com.ewaste.server.domain.model.pickup;
 
 import com.ewaste.server.domain.model.collector.Collector;
+import com.ewaste.server.domain.model.ewaste.EWasteItem;
 import com.ewaste.server.domain.model.user.User;
-import com.ewaste.server.domain.pattern.state.CollectedState;
+import com.ewaste.server.domain.pattern.state.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class PickupRequest {
     private User customer;
     private Long collectorId;
     private Collector collector;
-    private PickupStatus currentState;
+    private PickupState state;
     private Double priorityScore;
     private String address;
     private String scheduledDate;
@@ -30,7 +31,7 @@ public class PickupRequest {
     private LocalDateTime updatedAt;
 
     public PickupRequest() {
-        this.currentState = PickupStatus.REQUESTED;
+        this.state = new RequestedState();
         this.priorityScore = 0.0;
         this.items = new ArrayList<>();
         this.createdAt = LocalDateTime.now();
@@ -69,8 +70,16 @@ public class PickupRequest {
     public void setCustomer(User customer) {
         this.customer = customer;
         if (customer != null) {
-            this.customerId = customer.getId();
+            this.customerId = customer.getUserId();
         }
+    }
+
+    public Long getUserId() {
+        return customerId;
+    }
+
+    public void setUserId(Long userId) {
+        this.customerId = userId;
     }
 
     public Long getCollectorId() {
@@ -92,20 +101,22 @@ public class PickupRequest {
         }
     }
 
-    public PickupStatus getCurrentState() {
-        return currentState;
+    public String getCurrentState() {
+        return getStatus() != null ? getStatus().name() : null;
     }
 
     public void setCurrentState(PickupStatus currentState) {
-        this.currentState = currentState;
-        this.updatedAt = LocalDateTime.now();
+        setState(currentState);
     }
 
     public void setCurrentState(String state) {
         if (state != null) {
-            this.currentState = PickupStatus.fromString(state);
-            this.updatedAt = LocalDateTime.now();
+            setState(PickupStatus.fromString(state));
         }
+    }
+
+    public PickupStatus getStatus() {
+        return state != null ? state.getStatus() : null;
     }
 
     public Double getPriorityScore() {
@@ -130,6 +141,14 @@ public class PickupRequest {
 
     public void setScheduledDate(String scheduledDate) {
         this.scheduledDate = scheduledDate;
+    }
+
+    public String getPreferredDate() {
+        return scheduledDate;
+    }
+
+    public void setPreferredDate(String preferredDate) {
+        this.scheduledDate = preferredDate;
     }
 
     public String getPreferredTime() {
@@ -166,94 +185,82 @@ public class PickupRequest {
 
     // ========== STATE TRANSITION METHODS ==========
 
+    public void request() {
+        requireState().request(this);
+    }
+
     public void assign(Collector collector) {
-        if (currentState != PickupStatus.REQUESTED) {
-            throw new IllegalStateException(
-                    "Cannot assign pickup in state: " + currentState);
+        if (collector == null || collector.getCollectorId() == null) {
+            throw new IllegalArgumentException("A collector with a valid ID is required");
         }
+        assign(collector.getCollectorId());
         this.collector = collector;
-        this.collectorId = collector != null ? collector.getCollectorId() : null;
-        this.currentState = PickupStatus.ASSIGNED;
-        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void assign(Long collectorId) {
+        requireState().assign(this, collectorId);
     }
 
     public void collect() {
-        if (currentState != PickupStatus.ASSIGNED) {
-            throw new IllegalStateException(
-                    "Cannot collect pickup in state: " + currentState);
-        }
-        this.currentState = PickupStatus.COLLECTED;
-        this.updatedAt = LocalDateTime.now();
+        requireState().collect(this);
     }
 
     public void deliver() {
-        if (currentState != PickupStatus.COLLECTED) {
-            throw new IllegalStateException(
-                    "Cannot deliver pickup in state: " + currentState);
-        }
-        this.currentState = PickupStatus.DELIVERED;
-        this.updatedAt = LocalDateTime.now();
+        deliver(null);
+    }
+
+    public void deliver(Long centerId) {
+        requireState().deliver(this, centerId);
     }
 
     public void startProcessing() {
-        if (currentState != PickupStatus.DELIVERED) {
-            throw new IllegalStateException(
-                    "Cannot start processing pickup in state: " + currentState);
-        }
-        this.currentState = PickupStatus.PROCESSING;
-        this.updatedAt = LocalDateTime.now();
+        process();
+    }
+
+    public void process() {
+        requireState().process(this);
     }
 
     public void complete() {
-        if (currentState != PickupStatus.PROCESSING) {
-            throw new IllegalStateException(
-                    "Cannot complete pickup in state: " + currentState);
-        }
-        this.currentState = PickupStatus.COMPLETED;
-        this.updatedAt = LocalDateTime.now();
+        requireState().complete(this);
     }
 
     public void cancel() {
-        if (currentState.isTerminal()) {
-            throw new IllegalStateException(
-                    "Cannot cancel pickup in terminal state: " + currentState);
-        }
-        this.currentState = PickupStatus.CANCELLED;
-        this.updatedAt = LocalDateTime.now();
+        requireState().cancel(this);
     }
 
     public boolean canTransitionTo(PickupStatus nextState) {
-        return currentState.canTransitionTo(nextState);
+        return getStatus() != null && getStatus().canTransitionTo(nextState);
     }
 
     // ========== HELPER METHODS ==========
 
     public boolean isActive() {
-        return currentState.isActive();
+        return getStatus() != null && getStatus().isActive();
     }
 
     public boolean isCompleted() {
-        return currentState == PickupStatus.COMPLETED;
+        return getStatus() == PickupStatus.COMPLETED;
     }
 
     public boolean isCancelled() {
-        return currentState == PickupStatus.CANCELLED;
+        return getStatus() == PickupStatus.CANCELLED;
     }
 
     public boolean isAssigned() {
-        return currentState == PickupStatus.ASSIGNED;
+        return getStatus() == PickupStatus.ASSIGNED;
     }
 
     public boolean isCollected() {
-        return currentState == PickupStatus.COLLECTED;
+        return getStatus() == PickupStatus.COLLECTED;
     }
 
     public boolean isDelivered() {
-        return currentState == PickupStatus.DELIVERED;
+        return getStatus() == PickupStatus.DELIVERED;
     }
 
     public boolean isProcessing() {
-        return currentState == PickupStatus.PROCESSING;
+        return getStatus() == PickupStatus.PROCESSING;
     }
 
     public double getTotalWeight() {
@@ -295,7 +302,7 @@ public class PickupRequest {
     }
 
     public String getStatusDisplay() {
-        return currentState != null ? currentState.getDisplayName() : "Unknown";
+        return getStatus() != null ? getStatus().getDisplayName() : "Unknown";
     }
 
     @Override
@@ -317,29 +324,55 @@ public class PickupRequest {
                 "pickupId=" + pickupId +
                 ", customerId=" + customerId +
                 ", collectorId=" + collectorId +
-                ", currentState=" + currentState +
+                ", currentState=" + getStatus() +
                 ", priorityScore=" + priorityScore +
                 ", address='" + address + '\'' +
                 ", itemCount=" + getItemCount() +
                 '}';
     }
-    // Add this method for backward compatibility with state pattern
-    public void setState(PickupStatus state) {
-        this.currentState = state;
+    public void setState(PickupState state) {
+        if (state == null) {
+            throw new IllegalArgumentException("Pickup state cannot be null");
+        }
+        this.state = state;
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Add this method for backward compatibility with state pattern
-    public void setState(String state) {
-        if (state != null) {
-            this.currentState = PickupStatus.fromString(state);
-            this.updatedAt = LocalDateTime.now();
+    public void setState(PickupStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Pickup status cannot be null");
+        }
+        setState(toState(status));
+    }
+
+    public void setState(String status) {
+        if (status != null) {
+            setState(PickupStatus.fromString(status));
         }
     }
 
-    // Add this method to get state as string
     public String getState() {
-        return currentState != null ? currentState.name() : null;
+        return getCurrentState();
+    }
+
+    private PickupState requireState() {
+        if (state == null) {
+            throw new IllegalStateException("Pickup state is not initialized");
+        }
+        return state;
+    }
+
+    private PickupState toState(PickupStatus status) {
+        return switch (status) {
+            case SUBMITTED -> new SubmittedState();
+            case REQUESTED -> new RequestedState();
+            case ASSIGNED -> new AssignedState();
+            case COLLECTED -> new CollectedState();
+            case DELIVERED -> new DeliveredState();
+            case PROCESSING -> new ProcessingState();
+            case COMPLETED -> new CompletedState();
+            case CANCELLED -> new CancelledState();
+        };
     }
 
 }

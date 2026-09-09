@@ -6,12 +6,9 @@ import com.ewaste.server.api.dto.response.EWasteItemResponseDto;
 import com.ewaste.server.api.mapper.EWasteItemMapper;
 import com.ewaste.server.domain.model.ewaste.EWasteCategory;
 import com.ewaste.server.domain.model.ewaste.EWasteItem;
-import com.ewaste.server.domain.model.PickupItem;
-import com.ewaste.server.domain.model.PickupRequest;
 import com.ewaste.server.domain.repository.EWasteCategoryRepository;
 import com.ewaste.server.domain.repository.EWasteItemRepository;
-import com.ewaste.server.domain.repository.PickupItemRepository;
-import com.ewaste.server.domain.repository.PickupRequestRepository;
+import com.ewaste.server.domain.repository.PickupRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,19 +20,16 @@ public class EWasteService {
 
     private final EWasteItemRepository itemRepository;
     private final EWasteCategoryRepository categoryRepository;
-    private final PickupItemRepository pickupItemRepository;
-    private final PickupRequestRepository pickupRequestRepository;
+    private final PickupRepository pickupRepository;
     private final EWasteItemMapper itemMapper;
 
     public EWasteService(EWasteItemRepository itemRepository,
                          EWasteCategoryRepository categoryRepository,
-                         PickupItemRepository pickupItemRepository,
-                         PickupRequestRepository pickupRequestRepository,
+                         PickupRepository pickupRepository,
                          EWasteItemMapper itemMapper) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
-        this.pickupItemRepository = pickupItemRepository;
-        this.pickupRequestRepository = pickupRequestRepository;
+        this.pickupRepository = pickupRepository;
         this.itemMapper = itemMapper;
     }
 
@@ -94,7 +88,7 @@ public class EWasteService {
      */
     public List<EWasteItemResponseDto> getItemsByPickupId(Long pickupId) {
         // Validate pickup exists
-        pickupRequestRepository.findById(pickupId)
+        pickupRepository.findById(pickupId)
                 .orElseThrow(() -> new RuntimeException("Pickup not found with ID: " + pickupId));
 
         return itemRepository.findByPickupId(pickupId).stream()
@@ -125,15 +119,11 @@ public class EWasteService {
                 .orElseThrow(() -> new RuntimeException("Category not found with ID: " + dto.getCategoryId()));
 
         // Update fields
-        existingItem.setCategoryId(dto.getCategoryId());
-        existingItem.setModelName(dto.getModelName());
-        existingItem.setWeightKg(dto.getWeightKg());
-        existingItem.setHazardous(dto.getIsHazardous() != null ? dto.getIsHazardous() : existingItem.isHazardous());
-        existingItem.setWasteCondition(dto.getWasteCondition());
-        existingItem.setSpecificAttributes(dto.getSpecificAttributes());
+        EWasteItem replacement = itemMapper.toEntity(dto);
+        replacement.setId(existingItem.getId());
 
         // Save updated item
-        EWasteItem updatedItem = itemRepository.save(existingItem);
+        EWasteItem updatedItem = itemRepository.save(replacement);
 
         return itemMapper.toResponse(updatedItem);
     }

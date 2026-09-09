@@ -66,11 +66,28 @@ public class SqliteRewardRepository implements RewardRepository {
                 if (rs.next()) {
                     return Optional.of(mapResultSetToReward(rs));
                 }
+
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to find reward by ID: " + e.getMessage(), e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public List<Reward> findAll() {
+        String sql = "SELECT * FROM rewards ORDER BY reward_id DESC";
+        List<Reward> rewards = new ArrayList<>();
+        try (Connection conn = connectionManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                rewards.add(mapResultSetToReward(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to find all rewards: " + e.getMessage(), e);
+        }
+        return rewards;
     }
 
     @Override

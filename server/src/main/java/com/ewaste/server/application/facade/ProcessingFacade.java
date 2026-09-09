@@ -65,7 +65,7 @@ public class ProcessingFacade {
 
         // 1. Resolve workflow via Template Method Pattern
         AbstractProcessingTemplate workflow = resolveWorkflow(result);
-        workflow.executeProcessing(item, center);
+        AbstractProcessingTemplate.ProcessingRecord templateRecord = workflow.executeProcessing(item);
 
         // 2. Persist outcome
         ProcessingRecord record = new ProcessingRecord();
@@ -78,9 +78,6 @@ public class ProcessingFacade {
         // 3. Calculate and apply reward points
         int points = calculatePoints(item, result);
         record.setPointsAwarded(points);
-        if (points > 0 && item.getUserId() != null) {
-            rewardService.awardPoints(item.getUserId(), null, points, "Recycling: " + result.name());
-        }
 
         ProcessingRecord saved = processingService.saveRecord(record);
 

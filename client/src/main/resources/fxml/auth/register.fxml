@@ -8,7 +8,8 @@
 <VBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.ewaste.client.controller.RegisterController"
-      alignment="CENTER" spacing="14" styleClass="root" prefWidth="440" prefHeight="650">
+      alignment="CENTER" spacing="14" styleClass="root" prefWidth="440" prefHeight="650"
+      stylesheets="@../../css/admin.css">
 
     <!-- Header -->
     <VBox alignment="CENTER" spacing="4">

@@ -50,7 +50,15 @@ public class RecyclingCenter {
         return name;
     }
 
+    public String getCenterName() {
+        return name;
+    }
+
     public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCenterName(String name) {
         this.name = name;
     }
 
@@ -106,8 +114,24 @@ public class RecyclingCenter {
         return processingCapacityKg;
     }
 
+    public double getCapacityKg() {
+        return processingCapacityKg != null ? processingCapacityKg : 0.0;
+    }
+
     public void setProcessingCapacityKg(Double processingCapacityKg) {
         this.processingCapacityKg = processingCapacityKg;
+    }
+
+    public void setCapacityKg(double capacityKg) {
+        this.processingCapacityKg = capacityKg;
+    }
+
+    public double getCurrentUtilizationKg() {
+        return currentLoadKg != null ? currentLoadKg : 0.0;
+    }
+
+    public void setCurrentUtilizationKg(double loadKg) {
+        setCurrentLoadKg(loadKg);
     }
 
     public Double getCurrentLoadKg() {

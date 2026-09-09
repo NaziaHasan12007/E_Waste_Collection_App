@@ -1,8 +1,7 @@
 package com.ewaste.server.application.service;
 
-import com.ewaste.server.domain.model.PickupRequest;
-import com.ewaste.server.domain.model.ProcessingRecord;
-import com.ewaste.server.domain.model.user.User;
+import com.ewaste.server.domain.model.pickup.PickupRequest;
+import com.ewaste.server.domain.model.processing.ProcessingRecord;
 import com.ewaste.server.domain.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +14,13 @@ import java.util.Map;
 @Service
 public class ReportService {
 
-    private final PickupRequestRepository pickupRequestRepository;
+    private final PickupRepository pickupRequestRepository;
     private final EWasteItemRepository eWasteItemRepository;
     private final ProcessingRecordRepository processingRecordRepository;
     private final RewardRepository rewardRepository;
     private final CollectorRepository collectorRepository;
 
-    public ReportService(PickupRequestRepository pickupRequestRepository,
+    public ReportService(PickupRepository pickupRequestRepository,
                          EWasteItemRepository eWasteItemRepository,
                          ProcessingRecordRepository processingRecordRepository,
                          RewardRepository rewardRepository,
@@ -40,10 +39,10 @@ public class ReportService {
         ReportMetrics metrics = new ReportMetrics();
 
         // Total pickups
-        metrics.totalPickups = pickupRequestRepository.count();
+        metrics.totalPickups = pickupRequestRepository.findAll().size();
 
         // Total items processed
-        metrics.totalItemsProcessed = eWasteItemRepository.count();
+        metrics.totalItemsProcessed = eWasteItemRepository.findAll().size();
 
         // Total recycling points earned
         metrics.totalPointsEarned = rewardRepository.findAll().stream()
@@ -57,14 +56,14 @@ public class ReportService {
 
         // Hazardous waste ratio
         long hazardousCount = eWasteItemRepository.findByHazardousStatus(true).size();
-        long totalItems = eWasteItemRepository.count();
+        long totalItems = eWasteItemRepository.findAll().size();
         metrics.hazardousWasteRatio = totalItems > 0 ? (double) hazardousCount / totalItems : 0.0;
 
         // Active collectors
         metrics.activeCollectors = collectorRepository.findAvailable().size();
 
         // Total collectors
-        metrics.totalCollectors = collectorRepository.count();
+        metrics.totalCollectors = Math.toIntExact(collectorRepository.count());
 
         return metrics;
     }
@@ -81,7 +80,12 @@ public class ReportService {
         LocalDate end = LocalDate.parse(endDate, formatter);
 
         // Get pickups in date range
-        List<PickupRequest> pickups = pickupRequestRepository.findByDateRange(start, end);
+        List<PickupRequest> pickups = pickupRequestRepository.findAll().stream()
+                .filter(p -> p.getPreferredDate() != null
+                        && !p.getPreferredDate().isBlank()
+                        && !LocalDate.parse(p.getPreferredDate()).isBefore(start)
+                        && !LocalDate.parse(p.getPreferredDate()).isAfter(end))
+                .toList();
 
         stats.totalPickups = pickups.size();
 
@@ -113,7 +117,9 @@ public class ReportService {
                 .orElse("Unknown");
 
         // Get completed pickups
-        List<PickupRequest> completedPickups = pickupRequestRepository.findCompletedByCollectorId(collectorId);
+        List<PickupRequest> completedPickups = pickupRequestRepository.findByCollectorId(collectorId).stream()
+                .filter(PickupRequest::isCompleted)
+                .toList();
         report.totalPickupsCompleted = completedPickups.size();
 
         // Calculate total weight collected
@@ -171,11 +177,11 @@ public class ReportService {
         RewardSummary summary = new RewardSummary();
 
         // Get all rewards for customer
-        List<com.ewaste.server.domain.model.Reward> rewards = rewardRepository.findByCustomerId(customerId);
+        List<com.ewaste.server.domain.model.reward.Reward> rewards = rewardRepository.findByCustomerId(customerId);
 
         summary.totalTransactions = rewards.size();
         summary.totalPointsEarned = rewards.stream()
-                .mapToInt(com.ewaste.server.domain.model.Reward::getPointsEarned)
+                .mapToInt(com.ewaste.server.domain.model.reward.Reward::getPointsEarned)
                 .sum();
         summary.currentBalance = rewardRepository.getCurrentBalanceByCustomerId(customerId);
 

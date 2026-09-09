@@ -17,7 +17,7 @@ import java.util.Map;
 public class PickupApiClient extends ApiClient {
 
     private static PickupApiClient instance;
-    private static final String BASE_PATH = "/api/v1/pickups";
+    private static final String BASE_PATH = "/pickups";
 
     private PickupApiClient() {
         super();

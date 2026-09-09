@@ -9,7 +9,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.ewaste.client.controller.customer.CustomerDashboardController"
-            styleClass="root" prefWidth="1024" prefHeight="700">
+            styleClass="root" prefWidth="1024" prefHeight="700"
+            stylesheets="@../../css/admin.css">
 
     <!-- Top Header -->
     <top>

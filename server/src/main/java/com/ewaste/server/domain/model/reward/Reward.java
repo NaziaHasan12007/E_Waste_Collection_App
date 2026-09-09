@@ -8,8 +8,12 @@ public class Reward {
     private Long customerId;
     private int pointsEarned;
     private int balance;
+    private Long pickupId;
+    private String calculationBasis;
+    private java.time.LocalDateTime createdAt;
 
     public Reward() {
+        this.createdAt = java.time.LocalDateTime.now();
     }
     public Long getRewardId() {
         return id;
@@ -47,8 +51,16 @@ public class Reward {
         return customerId;
     }
 
+    public Long getUserId() {
+        return customerId;
+    }
+
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
+    }
+
+    public void setUserId(Long userId) {
+        this.customerId = userId;
     }
 
     public int getPointsEarned() {
@@ -58,6 +70,30 @@ public class Reward {
     public void setPointsEarned(int pointsEarned) {
         this.pointsEarned = pointsEarned;
     }
+
+    public void setPoints(int points) {
+        this.pointsEarned = points;
+    }
+
+    public int getPoints() {
+        return pointsEarned;
+    }
+
+    public void setPickupId(Long pickupId) {
+        this.pickupId = pickupId;
+    }
+
+    public void setCalculationBasis(String calculationBasis) {
+        this.calculationBasis = calculationBasis;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getPickupId() { return pickupId; }
+    public String getCalculationBasis() { return calculationBasis; }
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
 
     public int getBalance() {
         return balance;

@@ -21,18 +21,17 @@ public class CollectorApiClient extends ApiClient {
     }
 
     public CollectorClientResponse getCollectorProfile(Long collectorId) {
-        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(collectorId);
+        String endpoint = ApiConfig.getInstance().getCollectorEndpoint(collectorId);
         return get(endpoint, CollectorClientResponse.class);
     }
 
     public List<CollectorClientResponse> getAllCollectors() {
-        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(0L)
-                .replace("/0", ""); // Adjust this based on your actual endpoint
+        String endpoint = ApiConfig.getInstance().getCollectorsEndpoint();
         return get(endpoint, new TypeReference<List<CollectorClientResponse>>() {});
     }
 
     public CollectorClientResponse updateCollectorAvailability(Long collectorId, boolean available) {
-        String endpoint = ApiConfig.getInstance().getCollectorPerformanceEndpoint(collectorId) + "/availability";
+        String endpoint = ApiConfig.getInstance().getCollectorEndpoint(collectorId) + "/availability";
         return patch(endpoint, new AvailabilityRequest(available), CollectorClientResponse.class);
     }
 

@@ -32,6 +32,10 @@ public class PickupResponseDto {
         return userId;
     }
 
+    public Long getCustomerId() {
+        return userId;
+    }
+
     public void setUserId(Long userId) {
         this.userId = userId;
     }
@@ -69,6 +73,10 @@ public class PickupResponseDto {
     }
 
     public String getStatus() {
+        return status;
+    }
+
+    public String getCurrentState() {
         return status;
     }
 

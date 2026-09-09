@@ -17,6 +17,7 @@ public abstract class EWasteItem {
     private String modelName;
     private WasteCondition condition;
     private double weightKg;
+    private String description;
 
     protected EWasteItem(EWasteCategory category, String modelName, WasteCondition condition, double weightKg) {
         if (category == null) {
@@ -61,8 +62,16 @@ public abstract class EWasteItem {
         return id;
     }
 
+    public Long getItemId() {
+        return id;
+    }
+
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public boolean getIsHazardous() {
+        return isHazardous();
     }
 
     public EWasteCategory getCategory() {
@@ -98,6 +107,14 @@ public abstract class EWasteItem {
             throw new IllegalArgumentException("weightKg must be greater than zero");
         }
         this.weightKg = weightKg;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

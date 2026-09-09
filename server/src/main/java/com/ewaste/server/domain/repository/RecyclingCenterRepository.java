@@ -12,6 +12,8 @@ public interface RecyclingCenterRepository {
      */
     RecyclingCenter save(RecyclingCenter center);
 
+    RecyclingCenter update(RecyclingCenter center);
+
     /**
      * Find a recycling center by ID
      */
@@ -25,50 +27,67 @@ public interface RecyclingCenterRepository {
     /**
      * Find active recycling centers
      */
-    List<RecyclingCenter> findActive();
+    default List<RecyclingCenter> findActive() {
+        return findAll().stream().filter(RecyclingCenter::isActive).toList();
+    }
 
     /**
      * Find recycling centers with available capacity
      */
-    List<RecyclingCenter> findAvailable();
+    default List<RecyclingCenter> findAvailable() {
+        return findActive();
+    }
 
     /**
      * Find recycling centers with capacity greater than specified weight
      */
-    List<RecyclingCenter> findWithCapacity(double weightKg);
+    default List<RecyclingCenter> findWithCapacity(double weightKg) {
+        return findAvailable().stream().filter(c -> c.canAcceptProcessing(weightKg)).toList();
+    }
 
     /**
      * Update center load
      */
-    void updateLoad(Long centerId, double loadKg);
+    default void updateLoad(Long centerId, double loadKg) {
+    }
 
     /**
      * Update center active status
      */
-    void updateActiveStatus(Long centerId, boolean isActive);
+    default void updateActiveStatus(Long centerId, boolean isActive) {
+    }
 
     /**
      * Delete a recycling center by ID
      */
-    void deleteById(Long centerId);
+    default void deleteById(Long centerId) {
+    }
 
     /**
      * Check if a center exists by name
      */
-    boolean existsByName(String name);
+    default boolean existsByName(String name) {
+        return findAll().stream().anyMatch(c -> name != null && name.equalsIgnoreCase(c.getCenterName()));
+    }
 
     /**
      * Get total processing capacity of all centers
      */
-    double getTotalProcessingCapacity();
+    default double getTotalProcessingCapacity() {
+        return findAll().stream().mapToDouble(c -> c.getCapacityKg()).sum();
+    }
 
     /**
      * Get total current load of all centers
      */
-    double getTotalCurrentLoad();
+    default double getTotalCurrentLoad() {
+        return findAll().stream().mapToDouble(RecyclingCenter::getCurrentUtilizationKg).sum();
+    }
 
     /**
      * Count active centers
      */
-    long countActive();
+    default long countActive() {
+        return findActive().size();
+    }
 }

@@ -32,8 +32,30 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         log.info("Executing database seeding routine...");
         executeSqlScript("db/schema.sql");
+        ensurePickupColumns();
         executeSqlScript("db/seed_data.sql");
         log.info("Database seeding successfully finished.");
+    }
+
+    private void ensurePickupColumns() {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var columns = stmt.executeQuery("PRAGMA table_info(pickup_requests)")) {
+            boolean hasAddress = false;
+            boolean hasPreferredTime = false;
+            while (columns.next()) {
+                hasAddress |= "address".equalsIgnoreCase(columns.getString("name"));
+                hasPreferredTime |= "preferred_time".equalsIgnoreCase(columns.getString("name"));
+            }
+            if (!hasAddress) {
+                stmt.executeUpdate("ALTER TABLE pickup_requests ADD COLUMN address TEXT");
+            }
+            if (!hasPreferredTime) {
+                stmt.executeUpdate("ALTER TABLE pickup_requests ADD COLUMN preferred_time TEXT");
+            }
+        } catch (Exception e) {
+            log.error("Failed to migrate pickup request columns: {}", e.getMessage(), e);
+        }
     }
 
     private void executeSqlScript(String scriptPath) {

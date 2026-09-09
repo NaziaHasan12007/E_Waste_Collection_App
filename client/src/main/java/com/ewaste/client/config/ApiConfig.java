@@ -86,7 +86,7 @@ public class ApiConfig {
     }
 
     public String getRewardsEndpoint(Long customerId) {
-        return baseUrl + "/reports/rewards/customer/" + customerId;
+        return baseUrl + "/rewards/" + customerId;
     }
 
     public String getReportsSummaryEndpoint() {
@@ -99,6 +99,14 @@ public class ApiConfig {
 
     public String getCollectorPerformanceEndpoint(Long collectorId) {
         return baseUrl + "/reports/collector/" + collectorId;
+    }
+
+    public String getCollectorEndpoint(Long collectorId) {
+        return baseUrl + "/collectors/" + collectorId;
+    }
+
+    public String getCollectorsEndpoint() {
+        return baseUrl + "/collectors";
     }
 
     public String getBaseUrl() {

@@ -13,6 +13,8 @@ public interface PickupRepository {
      */
     PickupRequest save(PickupRequest pickup);
 
+    PickupRequest update(PickupRequest pickup);
+
     /**
      * Find a pickup by ID
      */
@@ -46,50 +48,84 @@ public interface PickupRepository {
     /**
      * Find active pickups for a customer (not completed or cancelled)
      */
-    List<PickupRequest> findActiveByCustomerId(Long customerId);
+    default List<PickupRequest> findActiveByCustomerId(Long customerId) {
+        return findByCustomerId(customerId).stream().filter(PickupRequest::isActive).toList();
+    }
 
     /**
      * Find active pickups for a collector (not completed or cancelled)
      */
-    List<PickupRequest> findActiveByCollectorId(Long collectorId);
+    default List<PickupRequest> findActiveByCollectorId(Long collectorId) {
+        return findByCollectorId(collectorId).stream().filter(PickupRequest::isActive).toList();
+    }
 
     /**
      * Find pending pickups (REQUESTED status)
      */
-    List<PickupRequest> findPendingPickups();
+    default List<PickupRequest> findPendingPickups() {
+        return findByStatus(PickupStatus.REQUESTED);
+    }
 
     /**
      * Find pickups by date range
      */
-    List<PickupRequest> findByDateRange(String startDate, String endDate);
+    default List<PickupRequest> findByDateRange(String startDate, String endDate) {
+        return findAll().stream()
+                .filter(p -> p.getPreferredDate() != null
+                        && p.getPreferredDate().compareTo(startDate) >= 0
+                        && p.getPreferredDate().compareTo(endDate) <= 0)
+                .toList();
+    }
 
     /**
      * Update pickup status
      */
-    void updateStatus(Long pickupId, PickupStatus status);
+    default void updateStatus(Long pickupId, PickupStatus status) {
+        findById(pickupId).ifPresent(p -> {
+            p.setState(status);
+            update(p);
+        });
+    }
 
     /**
      * Update pickup status and collector
      */
-    void updateStatusAndCollector(Long pickupId, PickupStatus status, Long collectorId);
+    default void updateStatusAndCollector(Long pickupId, PickupStatus status, Long collectorId) {
+        findById(pickupId).ifPresent(p -> {
+            p.setCollectorId(collectorId);
+            p.setState(status);
+            update(p);
+        });
+    }
 
     /**
      * Delete a pickup by ID
      */
-    void deleteById(Long pickupId);
+    default void deleteById(Long pickupId) {
+    }
 
     /**
      * Count pickups by status
      */
-    long countByStatus(PickupStatus status);
+    default long countByStatus(PickupStatus status) {
+        return findByStatus(status).size();
+    }
 
     /**
      * Count pickups by customer ID
      */
-    long countByCustomerId(Long customerId);
+    default long countByCustomerId(Long customerId) {
+        return findByCustomerId(customerId).size();
+    }
 
     /**
      * Get total weight of items in a pickup
      */
-    double getTotalWeight(Long pickupId);
+    default double getTotalWeight(Long pickupId) {
+        return findById(pickupId).map(PickupRequest::getTotalWeight).orElse(0.0);
+    }
+
+    default long count() {
+        return findAll().size();
+    }
 }

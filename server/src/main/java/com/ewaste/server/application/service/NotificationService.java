@@ -8,8 +8,8 @@ import com.ewaste.server.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,10 +39,16 @@ public class NotificationService {
         notification.setUserId(userId);
         notification.setMessage(message);
         notification.setRead(false);
-        notification.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        notification.setCreatedAt(LocalDateTime.now());
 
         Notification savedNotification = notificationRepository.save(notification);
         return mapToResponseDto(savedNotification);
+    }
+
+    public NotificationResponseDto createNotification(Long userId, String type, String title, String message) {
+        return createNotification(userId, title == null || title.isBlank()
+                ? message
+                : title + ": " + message);
     }
 
     /**
@@ -183,7 +189,7 @@ public class NotificationService {
                 notification.getNotificationId(),
                 notification.getMessage(),
                 notification.isRead(),
-                notification.getCreatedAt()
+                notification.getCreatedAt() == null ? null : Timestamp.valueOf(notification.getCreatedAt())
         );
     }
 }

@@ -1,17 +1,21 @@
 package com.ewaste.client.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 public class EWasteCategoryClientResponse {
 
+    @JsonProperty("categoryId")
     private Long id;
+    @JsonProperty("categoryName")
     private String name;
     private String description;
     private String icon;
     private String color;
     private Double recyclingRate;
     private Double carbonFootprintReduction;
-    private Integer rewardPointsPerKg;
+    @JsonProperty("basePointsPerKg")
+    private Double rewardPointsPerKg;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -21,7 +25,7 @@ public class EWasteCategoryClientResponse {
     public EWasteCategoryClientResponse(Long id, String name, String description, String icon,
                                         String color, Double recyclingRate,
                                         Double carbonFootprintReduction,
-                                        Integer rewardPointsPerKg, Boolean active) {
+                                        Double rewardPointsPerKg, Boolean active) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -41,7 +45,7 @@ public class EWasteCategoryClientResponse {
     public String getColor() { return color; }
     public Double getRecyclingRate() { return recyclingRate; }
     public Double getCarbonFootprintReduction() { return carbonFootprintReduction; }
-    public Integer getRewardPointsPerKg() { return rewardPointsPerKg; }
+    public Double getRewardPointsPerKg() { return rewardPointsPerKg; }
     public Boolean getActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
@@ -56,7 +60,7 @@ public class EWasteCategoryClientResponse {
     public void setCarbonFootprintReduction(Double carbonFootprintReduction) {
         this.carbonFootprintReduction = carbonFootprintReduction;
     }
-    public void setRewardPointsPerKg(Integer rewardPointsPerKg) {
+    public void setRewardPointsPerKg(Double rewardPointsPerKg) {
         this.rewardPointsPerKg = rewardPointsPerKg;
     }
     public void setActive(Boolean active) { this.active = active; }

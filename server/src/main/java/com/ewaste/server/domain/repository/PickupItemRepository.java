@@ -1,5 +1,5 @@
 package com.ewaste.server.domain.repository;
-import com.ewaste.server.domain.model.PickupItem;
+import com.ewaste.server.domain.model.pickup.PickupItem;
 import java.util.List;
 import java.util.Optional;
 

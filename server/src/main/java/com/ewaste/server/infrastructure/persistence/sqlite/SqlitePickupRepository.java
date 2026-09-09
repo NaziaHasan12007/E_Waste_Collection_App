@@ -25,8 +25,8 @@ public class SqlitePickupRepository implements PickupRepository {
 
     @Override
     public PickupRequest save(PickupRequest pickup) {
-        String sqlPickup = "INSERT INTO pickup_requests (customer_id, collector_id, current_state, priority_score, scheduled_date, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlPickup = "INSERT INTO pickup_requests (customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlItem = "INSERT INTO pickup_items (pickup_id, item_id) VALUES (?, ?)";
 
         try (Connection conn = dataSource.getConnection()) {
@@ -40,8 +40,10 @@ public class SqlitePickupRepository implements PickupRepository {
                 }
                 ps.setString(3, pickup.getStatus() != null ? pickup.getStatus().name() : PickupStatus.SUBMITTED.name());
                 ps.setDouble(4, pickup.getPriorityScore() != null ? pickup.getPriorityScore() : 0.0);
-                ps.setString(5, pickup.getPreferredDate() != null ? pickup.getPreferredDate() : "");
-                ps.setString(6, pickup.getCreatedAt() != null ? pickup.getCreatedAt().toString() : LocalDateTime.now().toString());
+                ps.setString(5, pickup.getAddress());
+                ps.setString(6, pickup.getPreferredDate() != null ? pickup.getPreferredDate() : "");
+                ps.setString(7, pickup.getPreferredTime());
+                ps.setString(8, pickup.getCreatedAt() != null ? pickup.getCreatedAt().toString() : LocalDateTime.now().toString());
                 ps.executeUpdate();
 
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -76,7 +78,7 @@ public class SqlitePickupRepository implements PickupRepository {
 
     @Override
     public PickupRequest update(PickupRequest pickup) {
-        String sql = "UPDATE pickup_requests SET collector_id = ?, current_state = ?, priority_score = ?, scheduled_date = ? " +
+        String sql = "UPDATE pickup_requests SET collector_id = ?, current_state = ?, priority_score = ?, address = ?, scheduled_date = ?, preferred_time = ? " +
                 "WHERE pickup_id = ?";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -87,8 +89,10 @@ public class SqlitePickupRepository implements PickupRepository {
             }
             ps.setString(2, pickup.getStatus() != null ? pickup.getStatus().name() : PickupStatus.SUBMITTED.name());
             ps.setDouble(3, pickup.getPriorityScore() != null ? pickup.getPriorityScore() : 0.0);
-            ps.setString(4, pickup.getPreferredDate() != null ? pickup.getPreferredDate() : "");
-            ps.setLong(5, pickup.getPickupId());
+            ps.setString(4, pickup.getAddress());
+            ps.setString(5, pickup.getPreferredDate() != null ? pickup.getPreferredDate() : "");
+            ps.setString(6, pickup.getPreferredTime());
+            ps.setLong(7, pickup.getPickupId());
             ps.executeUpdate();
             return pickup;
         } catch (SQLException e) {
@@ -98,7 +102,7 @@ public class SqlitePickupRepository implements PickupRepository {
 
     @Override
     public Optional<PickupRequest> findById(Long pickupId) {
-        String sql = "SELECT pickup_id, customer_id, collector_id, current_state, priority_score, scheduled_date, created_at " +
+        String sql = "SELECT pickup_id, customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at " +
                 "FROM pickup_requests WHERE pickup_id = ?";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -118,22 +122,27 @@ public class SqlitePickupRepository implements PickupRepository {
 
     @Override
     public List<PickupRequest> findAll() {
-        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, scheduled_date, created_at FROM pickup_requests", null);
+        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at FROM pickup_requests", null);
     }
 
     @Override
-    public List<PickupRequest> findByUserId(Long userId) {
-        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, scheduled_date, created_at FROM pickup_requests WHERE customer_id = ?", userId);
+    public List<PickupRequest> findByCustomerId(Long customerId) {
+        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at FROM pickup_requests WHERE customer_id = ?", customerId);
+    }
+
+    @Override
+    public List<PickupRequest> findByStatus(String status) {
+        return findByStatus(PickupStatus.fromString(status));
     }
 
     @Override
     public List<PickupRequest> findByCollectorId(Long collectorId) {
-        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, scheduled_date, created_at FROM pickup_requests WHERE collector_id = ?", collectorId);
+        return queryPickups("SELECT pickup_id, customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at FROM pickup_requests WHERE collector_id = ?", collectorId);
     }
 
     @Override
     public List<PickupRequest> findByStatus(PickupStatus status) {
-        String sql = "SELECT pickup_id, customer_id, collector_id, current_state, priority_score, scheduled_date, created_at FROM pickup_requests WHERE current_state = ?";
+        String sql = "SELECT pickup_id, customer_id, collector_id, current_state, priority_score, address, scheduled_date, preferred_time, created_at FROM pickup_requests WHERE current_state = ?";
         List<PickupRequest> list = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -196,7 +205,9 @@ public class SqlitePickupRepository implements PickupRepository {
         String stateStr = rs.getString("current_state");
         p.setState(resolveState(stateStr));
         p.setPriorityScore(rs.getDouble("priority_score"));
+        p.setAddress(rs.getString("address"));
         p.setPreferredDate(rs.getString("scheduled_date"));
+        p.setPreferredTime(rs.getString("preferred_time"));
         String createdAt = rs.getString("created_at");
         if (createdAt != null) {
             try {

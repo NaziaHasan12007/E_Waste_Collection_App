@@ -6,6 +6,8 @@ import com.ewaste.server.domain.model.user.Role;
 import com.ewaste.server.domain.model.user.User;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class UserMapper {
 
@@ -67,7 +69,7 @@ public class UserMapper {
         private String fullName;
         private String email;
         private String role;
-        private Timestamp createdAt;
+        private LocalDateTime createdAt;
 
         // Getters and Setters
         public Long getUserId() { return userId; }
@@ -82,7 +84,7 @@ public class UserMapper {
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
 
-        public Timestamp getCreatedAt() { return createdAt; }
-        public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     }
 }

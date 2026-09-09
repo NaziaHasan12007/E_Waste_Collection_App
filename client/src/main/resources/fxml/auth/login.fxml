@@ -8,7 +8,8 @@
 <VBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.ewaste.client.controller.LoginController"
-      alignment="CENTER" spacing="20" styleClass="root" prefWidth="420" prefHeight="550">
+      alignment="CENTER" spacing="20" styleClass="root" prefWidth="420" prefHeight="550"
+      stylesheets="@../../css/admin.css">
 
     <!-- Logo & Title -->
     <VBox alignment="CENTER" spacing="8">

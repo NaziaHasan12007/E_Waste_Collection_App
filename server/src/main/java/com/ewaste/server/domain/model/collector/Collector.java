@@ -112,6 +112,10 @@ public class Collector {
         this.isAvailable = isAvailable != null ? isAvailable : true;
     }
 
+    public void setAvailable(boolean available) {
+        setIsAvailable(available);
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

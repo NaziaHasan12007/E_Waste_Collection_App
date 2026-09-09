@@ -30,6 +30,7 @@
 
             <ToggleButton fx:id="availabilityToggle" text="Status: UNAVAILABLE" onAction="#handleToggleAvailability"/>
             <Button fx:id="refreshButton" text="Sync Data" onAction="#handleRefresh" styleClass="button-secondary"/>
+            <Button text="Logout" onAction="#handleLogout" styleClass="button-secondary"/>
             <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
         </HBox>
     </top>

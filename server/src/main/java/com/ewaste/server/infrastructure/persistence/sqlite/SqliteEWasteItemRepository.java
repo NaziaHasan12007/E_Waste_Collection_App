@@ -57,7 +57,8 @@ public class SqliteEWasteItemRepository implements EWasteItemRepository {
             stmt.setString(5, item.getCondition().name());
 
             // Store subtype-specific attributes as text
-            stmt.setString(6, buildSpecificAttributes(item));
+            stmt.setString(6, item.getDescription() != null && !item.getDescription().isBlank()
+                    ? item.getDescription() : buildSpecificAttributes(item));
 
             if (isUpdate) {
                 stmt.setLong(7, item.getId());
@@ -400,6 +401,7 @@ public class SqliteEWasteItemRepository implements EWasteItemRepository {
         }
 
         item.setId(itemId);
+        item.setDescription(attributes);
 
         return item;
     }

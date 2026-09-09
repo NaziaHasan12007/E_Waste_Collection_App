@@ -1,16 +1,9 @@
 package com.ewaste.server.infrastructure.config;
 
-import com.ewaste.server.infrastructure.persistence.sqlite.DatabaseConnectionManager;
-import com.ewaste.server.infrastructure.persistence.sqlite.SqliteEWasteCategoryRepository;
-import com.ewaste.server.infrastructure.persistence.sqlite.SqliteEWasteItemRepository;
-import com.ewaste.server.infrastructure.persistence.sqlite.SqliteNotificationRepository;
-import com.ewaste.server.infrastructure.persistence.sqlite.SqliteRewardRepository;
-import com.ewaste.server.infrastructure.persistence.sqlite.SqliteUserRepository;
-import com.ewaste.server.domain.repository.EWasteCategoryRepository;
-import com.ewaste.server.domain.repository.EWasteItemRepository;
-import com.ewaste.server.domain.repository.NotificationRepository;
-import com.ewaste.server.domain.repository.RewardRepository;
-import com.ewaste.server.domain.repository.UserRepository;
+import com.ewaste.server.domain.pattern.strategy.assignment.AssignmentStrategy;
+import com.ewaste.server.domain.pattern.strategy.assignment.LeastBusyCollectorStrategy;
+import com.ewaste.server.domain.pattern.strategy.priority.CompositePriorityStrategy;
+import com.ewaste.server.domain.pattern.strategy.priority.PriorityStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,32 +11,12 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 
     @Bean
-    public DatabaseConnectionManager databaseConnectionManager() {
-        return new DatabaseConnectionManager();
+    public PriorityStrategy priorityStrategy() {
+        return new CompositePriorityStrategy();
     }
 
     @Bean
-    public UserRepository userRepository(DatabaseConnectionManager connectionManager) {
-        return new SqliteUserRepository(connectionManager);
-    }
-
-    @Bean
-    public EWasteCategoryRepository eWasteCategoryRepository(DatabaseConnectionManager connectionManager) {
-        return new SqliteEWasteCategoryRepository(connectionManager);
-    }
-
-    @Bean
-    public EWasteItemRepository eWasteItemRepository(DatabaseConnectionManager connectionManager) {
-        return new SqliteEWasteItemRepository(connectionManager);
-    }
-
-    @Bean
-    public NotificationRepository notificationRepository(DatabaseConnectionManager connectionManager) {
-        return new SqliteNotificationRepository(connectionManager);
-    }
-
-    @Bean
-    public RewardRepository rewardRepository(DatabaseConnectionManager connectionManager) {
-        return new SqliteRewardRepository(connectionManager);
+    public AssignmentStrategy assignmentStrategy() {
+        return new LeastBusyCollectorStrategy();
     }
 }

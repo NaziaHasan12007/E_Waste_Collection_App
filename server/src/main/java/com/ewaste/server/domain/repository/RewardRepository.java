@@ -12,6 +12,8 @@ public interface RewardRepository {
      */
     Reward save(Reward reward);
 
+    List<Reward> findAll();
+
     /**
      * Find a reward by its ID
      * @param rewardId The reward ID
@@ -25,6 +27,14 @@ public interface RewardRepository {
      * @return List of rewards for the customer
      */
     List<Reward> findByCustomerId(Long customerId);
+
+    default List<Reward> findByUserId(Long userId) {
+        return findByCustomerId(userId);
+    }
+
+    default int findTotalPointsByUserId(Long userId) {
+        return getCurrentBalanceByCustomerId(userId);
+    }
 
     /**
      * Get the current reward balance for a customer

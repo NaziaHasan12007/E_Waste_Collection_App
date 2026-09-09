@@ -1,14 +1,21 @@
 package com.ewaste.client.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class EWasteItemClientRequest {
 
+    @JsonProperty("modelName")
     private String name;
     private Long categoryId;
     private String categoryName;
     private Double weightKg;
+    @JsonProperty("specificAttributes")
     private String description;
     private Integer quantity;
+    @JsonProperty("wasteCondition")
     private String condition;  // GOOD, FAIR, POOR
+    @JsonProperty("isHazardous")
+    private Boolean hazardous;
     private Long pickupId;
 
     public EWasteItemClientRequest() {}
@@ -44,6 +51,9 @@ public class EWasteItemClientRequest {
 
     public String getCondition() { return condition; }
     public void setCondition(String condition) { this.condition = condition; }
+
+    public Boolean getHazardous() { return hazardous; }
+    public void setHazardous(Boolean hazardous) { this.hazardous = hazardous; }
 
     public Long getPickupId() { return pickupId; }
     public void setPickupId(Long pickupId) { this.pickupId = pickupId; }

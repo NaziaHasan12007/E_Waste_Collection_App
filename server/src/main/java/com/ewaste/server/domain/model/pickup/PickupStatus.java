@@ -5,6 +5,7 @@ package com.ewaste.server.domain.model.pickup;
  * Used by the State pattern for pickup lifecycle management.
  */
 public enum PickupStatus {
+    SUBMITTED("Submitted", "Pickup has been submitted by customer"),
     REQUESTED("Requested", "Pickup has been requested by customer"),
     ASSIGNED("Assigned", "Pickup has been assigned to a collector"),
     COLLECTED("Collected", "Items have been collected from customer"),
@@ -39,6 +40,7 @@ public enum PickupStatus {
 
     public boolean canTransitionTo(PickupStatus nextStatus) {
         return switch (this) {
+            case SUBMITTED -> nextStatus == REQUESTED || nextStatus == CANCELLED;
             case REQUESTED -> nextStatus == ASSIGNED || nextStatus == CANCELLED;
             case ASSIGNED -> nextStatus == COLLECTED || nextStatus == CANCELLED;
             case COLLECTED -> nextStatus == DELIVERED || nextStatus == CANCELLED;

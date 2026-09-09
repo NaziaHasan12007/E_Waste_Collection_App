@@ -10,7 +10,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.ewaste.client.controller.customer.PickupHistoryController"
-            styleClass="root" prefWidth="900" prefHeight="650">
+            styleClass="root" prefWidth="900" prefHeight="650"
+            stylesheets="@../../css/admin.css">
 
     <top>
         <VBox styleClass="card-top-bar" spacing="10">
