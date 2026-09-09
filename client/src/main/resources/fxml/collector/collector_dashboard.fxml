@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.collector.CollectorDashboardController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Navigation & Profile Bar -->
+    <top>
+        <HBox spacing="18.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <VBox spacing="3.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label fx:id="welcomeLabel" text="Welcome back, Collector" styleClass="heading-1"/>
+                    <Label text="COLLECTOR HUB" styleClass="badge-tag"/>
+                </HBox>
+                <Label text="Field Operations, Route Monitoring &amp; Cargo Dispatch" styleClass="subtext"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <ToggleButton fx:id="availabilityToggle" text="Status: UNAVAILABLE" onAction="#handleToggleAvailability"/>
+            <Button fx:id="refreshButton" text="Sync Data" onAction="#handleRefresh" styleClass="button-secondary"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Main Workspace -->
+    <center>
+        <VBox spacing="24.0">
+            <padding>
+                <Insets top="26.0" right="28.0" bottom="26.0" left="28.0"/>
+            </padding>
+
+            <!-- Metrics Row -->
+            <HBox spacing="20.0">
+                <VBox spacing="10.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="PENDING RETRIEVALS" styleClass="heading-2"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Active Queue" styleClass="badge-tag"/>
+                    </HBox>
+                    <Label fx:id="activeTasksCountLabel" text="-" styleClass="metric-value"/>
+                    <Label text="Assigned items scheduled for collection" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="10.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="TRANSPORT VEHICLE" styleClass="heading-2"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Specs" styleClass="badge-tag"/>
+                    </HBox>
+                    <Label fx:id="vehicleLabel" text="Vehicle: Loading..." styleClass="metric-value-accent"/>
+                    <Label fx:id="capacityLabel" text="Cargo Load: Calculating..." styleClass="subtext"/>
+                </VBox>
+            </HBox>
+
+            <!-- Action Hub Card -->
+            <VBox spacing="16.0" styleClass="card">
+                <VBox spacing="4.0">
+                    <Label text="Logistics &amp; Dispatch Console" styleClass="heading-1"/>
+                    <Label text="Review item custody, access live collection queues, and record drop-offs at recycling centers." styleClass="subtext"/>
+                </VBox>
+                <Separator style="-fx-opacity: 0.1;"/>
+                <HBox spacing="16.0" alignment="CENTER_LEFT">
+                    <Button fx:id="viewTasksButton" text="Open Task &amp; Route Queue →" onAction="#handleViewTasks" styleClass="button-success"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

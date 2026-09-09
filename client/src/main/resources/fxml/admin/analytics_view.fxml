@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.admin.AnalyticsController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Action Bar -->
+    <top>
+        <HBox spacing="18.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <Button fx:id="backButton" text="← Dashboard" onAction="#handleBack" styleClass="button-secondary"/>
+            <VBox spacing="2.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label text="System Analytics &amp; Ecological Reports" styleClass="heading-1"/>
+                    <Label text="REPORTS_ENGINE" styleClass="badge-tag"/>
+                </HBox>
+                <Label text="Real-time environmental recovery metrics, hazardous ratios, and facility throughput" styleClass="subtext"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="refreshButton" text="Sync Telemetry" onAction="#handleRefresh" styleClass="button"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Analytics Dashboard Workspace -->
+    <center>
+        <VBox spacing="20.0">
+            <padding>
+                <Insets top="20.0" right="28.0" bottom="20.0" left="28.0"/>
+            </padding>
+
+            <!-- KPI Metric Cards Grid -->
+            <HBox spacing="16.0">
+                <VBox spacing="6.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="TOTAL DIVERSIION" styleClass="heading-2"/>
+                    <Label fx:id="totalVolumeLabel" text="0.0 kg" styleClass="metric-value"/>
+                    <Label text="Total e-waste mass diverted from landfill" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="6.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="HAZARDOUS RATIO" styleClass="heading-2"/>
+                    <Label fx:id="hazardousRatioLabel" text="0.0 %" styleClass="metric-value-warning"/>
+                    <Label text="Cargo containing toxic elements" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="6.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="POINTS ISSUED" styleClass="heading-2"/>
+                    <Label fx:id="totalPointsIssuedLabel" text="0" styleClass="metric-value-accent"/>
+                    <Label text="Green customer rewards distributed" styleClass="subtext"/>
+                </VBox>
+
+                <VBox spacing="6.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="FLEET UTILIZATION" styleClass="heading-2"/>
+                    <Label fx:id="activeFleetUtilizationLabel" text="0.0 %" styleClass="metric-value"/>
+                    <Label text="Active collector payload efficiency" styleClass="subtext"/>
+                </VBox>
+            </HBox>
+
+            <!-- Graphical Reports Row -->
+            <HBox spacing="18.0" VBox.vgrow="ALWAYS">
+                <!-- Pie Chart: Material Breakdown -->
+                <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="Electronic Waste Material Breakdown" styleClass="heading-2"/>
+                    <PieChart fx:id="categoryDistributionChart" legendVisible="true" VBox.vgrow="ALWAYS"/>
+                </VBox>
+
+                <!-- Bar Chart: Facility Recovery Throughput -->
+                <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label text="Certified Facility Throughput (Tonnage)" styleClass="heading-2"/>
+                    <BarChart fx:id="facilityThroughputChart" legendVisible="false" VBox.vgrow="ALWAYS">
+                        <xAxis>
+                            <CategoryAxis label="Facility Center ID / Zone"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis label="Weight Processed (kg)"/>
+                        </yAxis>
+                    </BarChart>
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

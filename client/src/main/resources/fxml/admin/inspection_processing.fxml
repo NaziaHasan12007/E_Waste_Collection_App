@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.admin.InspectionProcessingController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Action Bar -->
+    <top>
+        <HBox spacing="18.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <Button fx:id="backButton" text="← Dashboard" onAction="#handleBack" styleClass="button-secondary"/>
+            <VBox spacing="2.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label text="Facility Inspection &amp; Material Workflows" styleClass="heading-1"/>
+                    <Label text="FACILITY_AUDIT" styleClass="badge-tag"/>
+                </HBox>
+                <Label text="Audit delivered cargo, execute Template Method recovery processes, and credit points" styleClass="subtext"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Split Workspace -->
+    <center>
+        <HBox spacing="22.0">
+            <padding>
+                <Insets top="22.0" right="28.0" bottom="22.0" left="28.0"/>
+            </padding>
+
+            <!-- Left: Delivered Pickups Awaiting Inspection -->
+            <VBox spacing="12.0" HBox.hgrow="ALWAYS" prefWidth="540.0">
+                <Label text="Delivered Inbound Cargo" styleClass="heading-2"/>
+                <TableView fx:id="deliveredPickupsTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="pickupIdColumn" text="Pickup ID" prefWidth="85.0"/>
+                        <TableColumn fx:id="pickupAddressColumn" text="Origin Address" prefWidth="290.0"/>
+                        <TableColumn fx:id="pickupDateColumn" text="Drop Date" prefWidth="130.0"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="No delivered cargo currently pending facility inspection." styleClass="subtext"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+            <!-- Right: Inspection Execution Form -->
+            <VBox spacing="14.0" styleClass="card" prefWidth="480.0">
+                <VBox spacing="2.0">
+                    <Label text="Execute Inspection Decision" styleClass="heading-1"/>
+                    <Label text="Select target recovery route and submit technical grading" styleClass="subtext"/>
+                </VBox>
+
+                <Separator style="-fx-opacity: 0.1;"/>
+
+                <Label text="Target EWaste Item ID:" styleClass="heading-2"/>
+                <TextField fx:id="targetItemIdField" promptText="e.g. 101"/>
+
+                <Label text="Designated Recycling Center:" styleClass="heading-2"/>
+                <ComboBox fx:id="centerComboBox" maxWidth="Infinity" promptText="Select Facility Center..."/>
+
+                <Label text="Processing Outcome Template:" styleClass="heading-2"/>
+                <ComboBox fx:id="workflowTypeComboBox" maxWidth="Infinity"/>
+
+                <Label text="Technical Inspection Findings &amp; Safety Notes:" styleClass="heading-2"/>
+                <TextArea fx:id="inspectionNotesArea" prefRowCount="4" promptText="Condition notes, serial verification, heavy metal or battery safety observations..."/>
+
+                <Region VBox.vgrow="ALWAYS"/>
+                <Button fx:id="executeWorkflowButton" text="✔ Commit Processing &amp; Reward Points"
+                        onAction="#handleExecuteWorkflow" maxWidth="Infinity" styleClass="button-success"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>
