@@ -1,85 +1,88 @@
 package com.ewaste.client.session;
 
-/**
- * Thread-safe singleton tracking the current authenticated user identity,
- * active authorization role, and JWT token for the client runtime.
- */
-public final class UserSession {
+import java.time.LocalDateTime;
 
-    private static volatile UserSession instance;
+/**
+ * Manages the current user session state
+ */
+public class UserSession {
+
+    private static UserSession instance;
 
     private Long userId;
-    private String email;
     private String fullName;
+    private String email;
     private String role;
-    private String authToken;
+    private String token;
+    private LocalDateTime loginTime;
+    private boolean isAuthenticated;
 
     private UserSession() {}
 
     public static UserSession getInstance() {
         if (instance == null) {
-            synchronized (UserSession.class) {
-                if (instance == null) {
-                    instance = new UserSession();
-                }
-            }
+            instance = new UserSession();
         }
         return instance;
     }
 
-    public synchronized void setSession(Long userId, String email, String fullName, String role, String authToken) {
+    public void startSession(Long userId, String fullName, String email, String role, String token) {
         this.userId = userId;
-        this.email = email;
         this.fullName = fullName;
-        this.role = (role != null) ? role.toUpperCase() : null;
-        this.authToken = authToken;
+        this.email = email;
+        this.role = role;
+        this.token = token;
+        this.loginTime = LocalDateTime.now();
+        this.isAuthenticated = true;
     }
 
-    public synchronized void clear() {
+    public void endSession() {
         this.userId = null;
-        this.email = null;
         this.fullName = null;
+        this.email = null;
         this.role = null;
-        this.authToken = null;
+        this.token = null;
+        this.loginTime = null;
+        this.isAuthenticated = false;
     }
 
-    public synchronized boolean isAuthenticated() {
-        return authToken != null && !authToken.isBlank();
+    public boolean isAuthenticated() {
+        return isAuthenticated && token != null && !token.isEmpty();
     }
 
-    public synchronized Long getUserId() {
-        return userId;
+    public boolean hasRole(String roleName) {
+        return isAuthenticated && role != null && role.equalsIgnoreCase(roleName);
     }
 
-    public synchronized String getEmail() {
-        return email;
+    public boolean isCustomer() {
+        return hasRole("CUSTOMER");
     }
 
-    public synchronized String getUserName() {
-        return fullName != null ? fullName : email;
+    public boolean isCollector() {
+        return hasRole("COLLECTOR");
     }
 
-    public synchronized String getFullName() {
-        return fullName;
+    public boolean isAdmin() {
+        return hasRole("ADMIN");
     }
 
-    public synchronized String getRole() {
-        return role;
-    }
+    // Getters
+    public Long getUserId() { return userId; }
+    public String getFullName() { return fullName; }
+    public String getEmail() { return email; }
+    public String getRole() { return role; }
+    public String getToken() { return token; }
+    public LocalDateTime getLoginTime() { return loginTime; }
 
-    public synchronized String getAuthToken() {
-        return authToken;
-    }
-
-    public synchronized boolean isCustomer() {
-        return "CUSTOMER".equalsIgnoreCase(this.role);
-    }
-
-    public synchronized boolean isCollector() {
-        return "COLLECTOR".equalsIgnoreCase(this.role);
-    }
-
-    public synchronized boolean isAdmin() {
-        return "ADMIN".equalsIgnoreCase(this.role);
+    @Override
+    public String toString() {
+        return "UserSession{" +
+                "userId=" + userId +
+                ", fullName='" + fullName + '\'' +
+                ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                ", loginTime=" + loginTime +
+                ", isAuthenticated=" + isAuthenticated +
+                '}';
     }
 }

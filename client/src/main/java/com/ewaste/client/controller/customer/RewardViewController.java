@@ -1,87 +1,224 @@
-package com.ewaste.client.controller.customer;
+package com.ewaste.client.controller;
 
-import com.ewaste.client.api.RewardApiClient;
-import com.ewaste.client.controller.BaseController;
-import com.ewaste.client.dto.response.RewardClientResponse;
-import com.ewaste.client.navigation.AppScreen;
-import com.ewaste.client.navigation.SceneNavigator;
-import com.ewaste.client.util.AlertHelper;
-import javafx.beans.property.SimpleStringProperty;
+import com.ewaste.client.dto.RewardClientResponse;
+import com.ewaste.client.network.ApiClient;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-/**
- * Controller displaying customer reward point balance and calculation history ledger.
- */
+import java.util.List;
+
 public class RewardViewController extends BaseController {
 
-    @FXML private Label totalPointsLabel;
-    @FXML private TableView<RewardClientResponse.RewardEntry> ledgerTable;
-    @FXML private TableColumn<RewardClientResponse.RewardEntry, String> idColumn;
-    @FXML private TableColumn<RewardClientResponse.RewardEntry, String> pickupIdColumn;
-    @FXML private TableColumn<RewardClientResponse.RewardEntry, String> pointsColumn;
-    @FXML private TableColumn<RewardClientResponse.RewardEntry, String> basisColumn;
-    @FXML private TableColumn<RewardClientResponse.RewardEntry, String> dateColumn;
-
-    @FXML private ProgressIndicator loadingIndicator;
-
-    private final RewardApiClient rewardApiClient = new RewardApiClient();
-    private final ObservableList<RewardClientResponse.RewardEntry> entries = FXCollections.observableArrayList();
-
     @FXML
+    private Label lblTotalPoints;
+    @FXML
+    private Label lblCurrentBalance;
+    @FXML
+    private Label lblTotalTransactions;
+    @FXML
+    private TableView<RewardTransaction> tableRewards;
+    @FXML
+    private TableColumn<RewardTransaction, Long> colTransactionId;
+    @FXML
+    private TableColumn<RewardTransaction, Integer> colPoints;
+    @FXML
+    private TableColumn<RewardTransaction, Integer> colBalance;
+    @FXML
+    private TableColumn<RewardTransaction, String> colDate;
+    @FXML
+    private PieChart chartPointsDistribution;
+    @FXML
+    private ProgressIndicator progressIndicator;
+    @FXML
+    private Button btnRefresh;
+
+    private ApiClient apiClient;
+    private List<RewardClientResponse> allRewards;
+
     @Override
-    public void initialize() {
-        super.initialize();
-        if (loadingIndicator != null) loadingIndicator.setVisible(false);
+    protected void onInitialize() {
+        apiClient = ClientContext.getInstance().getApiClient();
 
-        idColumn.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getRewardId())));
-        pickupIdColumn.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getPickupId())));
-        pointsColumn.setCellValueFactory(c -> new SimpleStringProperty("+" + c.getValue().getPoints()));
-        basisColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCalculationBasis()));
-        dateColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCreatedAt()));
+        // Setup table columns
+        setupTableColumns();
 
-        ledgerTable.setItems(entries);
-        loadRewardLedger();
+        // Setup event handlers
+        btnRefresh.setOnAction(event -> loadRewardData());
+
+        // Load data
+        loadRewardData();
     }
 
-    private void loadRewardLedger() {
-        setLoading(true);
-        Task<RewardClientResponse> task = new Task<>() {
-            @Override
-            protected RewardClientResponse call() throws Exception {
-                return rewardApiClient.getCustomerRewardSummary(session.getUserId());
-            }
-        };
+    private void setupTableColumns() {
+        colTransactionId.setCellValueFactory(new PropertyValueFactory<>("transactionId"));
+        colPoints.setCellValueFactory(new PropertyValueFactory<>("pointsEarned"));
+        colBalance.setCellValueFactory(new PropertyValueFactory<>("balance"));
+        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
 
-        task.setOnSucceeded(e -> {
-            setLoading(false);
-            RewardClientResponse response = task.getValue();
-            if (response != null) {
-                totalPointsLabel.setText(response.getTotalPoints() + " Pts");
-                if (response.getEntries() != null) {
-                    entries.setAll(response.getEntries());
+        // Format points with + sign
+        colPoints.setCellFactory(column -> new TableCell<RewardTransaction, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText("+" + item);
+                    setStyle("-fx-text-fill: #28a745; -fx-font-weight: bold;");
                 }
             }
         });
+    }
 
-        task.setOnFailed(e -> {
-            setLoading(false);
-            log.error("Failed to load rewards", task.getException());
-            AlertHelper.showError("Error", "Could not load reward ledger.");
-        });
+    private void loadRewardData() {
+        setLoading(true);
 
-        runAsync(task);
+        new Thread(() -> {
+            try {
+                Long customerId = userSession.getUserId();
+                allRewards = apiClient.getRewardsByCustomer(customerId);
+
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    updateRewardDisplay();
+                    updateTable();
+                    updateChart();
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Error", "Failed to load reward data", e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+    private void updateRewardDisplay() {
+        if (allRewards == null || allRewards.isEmpty()) {
+            lblTotalPoints.setText("0");
+            lblCurrentBalance.setText("0");
+            lblTotalTransactions.setText("0");
+            return;
+        }
+
+        int totalPoints = allRewards.stream()
+                .mapToInt(RewardClientResponse::getPointsEarned)
+                .sum();
+
+        int currentBalance = allRewards.isEmpty() ? 0 :
+                allRewards.get(allRewards.size() - 1).getBalance();
+
+        lblTotalPoints.setText(String.valueOf(totalPoints));
+        lblCurrentBalance.setText(String.valueOf(currentBalance));
+        lblTotalTransactions.setText(String.valueOf(allRewards.size()));
+    }
+
+    private void updateTable() {
+        if (allRewards == null) return;
+
+        List<RewardTransaction> transactions = allRewards.stream()
+                .map(this::convertToTransaction)
+                .toList();
+
+        tableRewards.setItems(FXCollections.observableArrayList(transactions));
+    }
+
+    private RewardTransaction convertToTransaction(RewardClientResponse reward) {
+        RewardTransaction transaction = new RewardTransaction();
+        transaction.setTransactionId(reward.getRewardId());
+        transaction.setPointsEarned(reward.getPointsEarned());
+        transaction.setBalance(reward.getBalance());
+        transaction.setDate("Reward #" + reward.getRewardId());
+        return transaction;
+    }
+
+    private void updateChart() {
+        chartPointsDistribution.getData().clear();
+
+        if (allRewards == null || allRewards.isEmpty()) {
+            chartPointsDistribution.getData().add(
+                    new PieChart.Data("No Data", 1)
+            );
+            return;
+        }
+
+        // Create distribution chart
+        // In real implementation, this would show categories or time-based distribution
+        int lowPoints = 0;
+        int mediumPoints = 0;
+        int highPoints = 0;
+
+        for (RewardClientResponse reward : allRewards) {
+            int points = reward.getPointsEarned();
+            if (points <= 50) lowPoints++;
+            else if (points <= 150) mediumPoints++;
+            else highPoints++;
+        }
+
+        chartPointsDistribution.getData().addAll(
+                new PieChart.Data("Low (≤50)", lowPoints),
+                new PieChart.Data("Medium (51-150)", mediumPoints),
+                new PieChart.Data("High (>150)", highPoints)
+        );
+
+        chartPointsDistribution.setTitle("Reward Distribution");
+        chartPointsDistribution.setLegendVisible(true);
+        chartPointsDistribution.setLabelsVisible(true);
     }
 
     @FXML
-    private void handleBackToDashboard() {
-        SceneNavigator.loadScreen(AppScreen.CUSTOMER_DASHBOARD, false);
+    private void handleRefresh() {
+        loadRewardData();
     }
 
-    private void setLoading(boolean isLoading) {
-        if (loadingIndicator != null) loadingIndicator.setVisible(isLoading);
+    @FXML
+    private void handleBack() {
+        navigateBack();
+    }
+
+    private void setLoading(boolean loading) {
+        progressIndicator.setVisible(loading);
+        tableRewards.setDisable(loading);
+        btnRefresh.setDisable(loading);
+    }
+
+    // Table item class
+    public static class RewardTransaction {
+        private Long transactionId;
+        private Integer pointsEarned;
+        private Integer balance;
+        private String date;
+
+        public Long getTransactionId() { return transactionId; }
+        public void setTransactionId(Long transactionId) { this.transactionId = transactionId; }
+        public Integer getPointsEarned() { return pointsEarned; }
+        public void setPointsEarned(Integer pointsEarned) { this.pointsEarned = pointsEarned; }
+        public Integer getBalance() { return balance; }
+        public void setBalance(Integer balance) { this.balance = balance; }
+        public String getDate() { return date; }
+        public void setDate(String date) { this.date = date; }
+    }
+
+    // Placeholder API interface
+    private interface ApiClient {
+        List<RewardClientResponse> getRewardsByCustomer(Long customerId) throws Exception;
+    }
+
+    private static class ClientContext {
+        private static ClientContext instance = new ClientContext();
+
+        public static ClientContext getInstance() {
+            return instance;
+        }
+
+        public ApiClient getApiClient() {
+            return null;
+        }
     }
 }

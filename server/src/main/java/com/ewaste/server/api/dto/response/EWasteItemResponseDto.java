@@ -1,34 +1,39 @@
-package com.ewaste.server.api.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-
-public class EWasteItemRequestDto {
-
-    @NotNull(message = "Category ID is required")
+package com.ewaste.server.api.dto.response;
+public class EWasteItemResponseDto {
+    private Long itemId;
     private Long categoryId;
-
-    @NotBlank(message = "Model name is required")
+    private String categoryName;
     private String modelName;
-
-    @NotNull(message = "Weight is required")
-    @Positive(message = "Weight must be greater than 0")
     private Double weightKg;
-
-    private Boolean isHazardous; // Optional, will use category default if not provided
-
-    @NotBlank(message = "Waste condition is required")
-    private String wasteCondition; // WORKING, DAMAGED, NON_FUNCTIONAL, etc.
-
-    private String specificAttributes; // JSON string for additional attributes
+    private Boolean isHazardous;
+    private String wasteCondition;
+    private String specificAttributes;
 
     // Constructors
-    public EWasteItemRequestDto() {}
+    public EWasteItemResponseDto() {}
+
+    public EWasteItemResponseDto(Long itemId, Long categoryId, String categoryName,
+                                 String modelName, Double weightKg, Boolean isHazardous,
+                                 String wasteCondition, String specificAttributes) {
+        this.itemId = itemId;
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.modelName = modelName;
+        this.weightKg = weightKg;
+        this.isHazardous = isHazardous;
+        this.wasteCondition = wasteCondition;
+        this.specificAttributes = specificAttributes;
+    }
 
     // Getters and Setters
+    public Long getItemId() { return itemId; }
+    public void setItemId(Long itemId) { this.itemId = itemId; }
+
     public Long getCategoryId() { return categoryId; }
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
 
     public String getModelName() { return modelName; }
     public void setModelName(String modelName) { this.modelName = modelName; }
@@ -47,8 +52,10 @@ public class EWasteItemRequestDto {
 
     @Override
     public String toString() {
-        return "EWasteItemRequestDto{" +
-                "categoryId=" + categoryId +
+        return "EWasteItemResponseDto{" +
+                "itemId=" + itemId +
+                ", categoryId=" + categoryId +
+                ", categoryName='" + categoryName + '\'' +
                 ", modelName='" + modelName + '\'' +
                 ", weightKg=" + weightKg +
                 ", isHazardous=" + isHazardous +

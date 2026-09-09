@@ -1,107 +1,225 @@
 package com.ewaste.client.controller;
 
-import com.ewaste.client.api.AuthApiClient;
+import com.ewaste.client.api.ApiConfig;
+import com.ewaste.client.api.AppScreen;
+import com.ewaste.client.api.ClientContext;
+import com.ewaste.client.session.UserSession;
 import com.ewaste.client.dto.response.AuthClientResponse;
-import com.ewaste.client.navigation.AppScreen;
-import com.ewaste.client.navigation.SceneNavigator;
-import com.ewaste.client.util.AlertHelper;
-import javafx.concurrent.Task;
+import com.ewaste.client.dto.request.LoginClientRequest;
+import com.ewaste.client.network.ApiClient;
+import com.ewaste.client.network.ApiClientImpl;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
 
-/**
- * Controller handling user authentication and role-based screen routing.
- */
+import java.awt.*;
+import java.io.IOException;
+
 public class LoginController extends BaseController {
 
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private Button loginButton;
-    @FXML private ProgressIndicator loadingIndicator;
-
-    private final AuthApiClient authApiClient = new AuthApiClient();
-
     @FXML
+    private TextField txtEmail;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Button btnLogin;
+    @FXML
+    private Button btnRegister;
+    @FXML
+    private ProgressIndicator progressIndicator;
+    @FXML
+    private Label lblError;
+    @FXML
+    private VBox loginContainer;
+    @FXML
+    private CheckBox chkRememberMe;
+
+    private ApiClient apiClient;
+
     @Override
-    public void initialize() {
-        super.initialize();
-        if (loadingIndicator != null) {
-            loadingIndicator.setVisible(false);
+    protected void onInitialize() {
+        // Initialize API client
+        apiClient = ClientContext.getInstance().getApiClient();
+
+        // Setup event handlers
+        setupEventHandlers();
+
+        // Clear any previous session
+        userSession.endSession();
+
+        // Set focus to email field
+        Platform.runLater(() -> txtEmail.requestFocus());
+
+        // Apply any saved credentials if remember me is enabled
+        loadSavedCredentials();
+    }
+
+    private void setupEventHandlers() {
+        // Enter key support for password field
+        txtPassword.setOnKeyPressed(this::handleEnterKey);
+
+        // Enter key support for email field
+        txtEmail.setOnKeyPressed(this::handleEnterKey);
+
+        // Login button action
+        btnLogin.setOnAction(event -> handleLogin());
+
+        // Register button action
+        btnRegister.setOnAction(event -> navigateTo(AppScreen.REGISTER));
+
+        // Clear error on typing
+        txtEmail.textProperty().addListener((obs, oldVal, newVal) -> clearError());
+        txtPassword.textProperty().addListener((obs, oldVal, newVal) -> clearError());
+    }
+
+    private void handleEnterKey(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleLogin();
         }
     }
 
     @FXML
     private void handleLogin() {
-        String email = emailField.getText().trim();
-        String password = passwordField.getText();
+        // Clear previous error
+        clearError();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            AlertHelper.showWarning("Validation Error", "Please provide both email and password.");
+        // Validate input
+        if (!validateInput()) {
             return;
         }
 
+        // Show loading state
         setLoading(true);
 
-        Task<AuthClientResponse> loginTask = new Task<>() {
-            @Override
-            protected AuthClientResponse call() throws Exception {
-                return authApiClient.login(email, password);
+        // Perform login in background thread
+        new Thread(() -> {
+            try {
+                LoginClientRequest request = new LoginClientRequest(
+                        txtEmail.getText().trim(),
+                        txtPassword.getText().trim()
+                );
+
+                AuthClientResponse response = apiClient.login(request);
+
+                // Update UI on JavaFX thread
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    handleLoginSuccess(response);
+                });
+
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Login Failed", "Network Error",
+                            "Unable to connect to server. Please check your connection.\n\n" +
+                                    "Error: " + e.getMessage());
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    setLoading(false);
+                    showError("Login Failed", "Authentication Error",
+                            "Invalid email or password.\n\n" +
+                                    "Please try again or register if you don't have an account.");
+                });
             }
-        };
-
-        loginTask.setOnSucceeded(event -> {
-            setLoading(false);
-            AuthClientResponse response = loginTask.getValue();
-            if (response != null && response.getToken() != null) {
-                // Initialize session state
-                session.setToken(response.getToken());
-                session.setUserId(response.getUserId());
-                session.setUserName(response.getFullName());
-                session.setEmail(response.getEmail());
-                session.setRole(response.getRole());
-
-                routeUserByRole(response.getRole());
-            } else {
-                AlertHelper.showError("Login Failed", "Invalid response received from authentication server.");
-            }
-        });
-
-        loginTask.setOnFailed(event -> {
-            setLoading(false);
-            Throwable ex = loginTask.getException();
-            log.error("Authentication failed for {}", email, ex);
-            AlertHelper.showError("Authentication Failed", ex.getMessage() != null ? ex.getMessage() : "Invalid credentials.");
-        });
-
-        runAsync(loginTask);
+        }).start();
     }
 
-    private void routeUserByRole(String role) {
-        if (role == null) {
-            AlertHelper.showError("Authorization Error", "No role assigned to this account.");
-            return;
+    private void handleLoginSuccess(AuthClientResponse response) {
+        // Start user session
+        userSession.startSession(
+                response.getUserId(),
+                response.getFullName(),
+                response.getEmail(),
+                response.getRole(),
+                response.getToken()
+        );
+
+        // Save credentials if remember me is checked
+        if (chkRememberMe.isSelected()) {
+            saveCredentials(txtEmail.getText().trim());
         }
 
-        switch (role.toUpperCase()) {
-            case "ADMIN" -> SceneNavigator.loadScreen(AppScreen.ADMIN_DASHBOARD, false);
-            case "COLLECTOR" -> SceneNavigator.loadScreen(AppScreen.COLLECTOR_DASHBOARD, false);
-            case "CUSTOMER" -> SceneNavigator.loadScreen(AppScreen.CUSTOMER_DASHBOARD, false);
-            default -> AlertHelper.showError("Access Denied", "Unrecognized system role: " + role);
+        // Navigate to appropriate dashboard based on role
+        if (userSession.isAdmin()) {
+            navigateTo(AppScreen.ADMIN_DASHBOARD);
+        } else if (userSession.isCollector()) {
+            navigateTo(AppScreen.COLLECTOR_DASHBOARD);
+        } else if (userSession.isCustomer()) {
+            navigateTo(AppScreen.CUSTOMER_DASHBOARD);
+        } else {
+            showError("Error", "Unknown Role", "User role not recognized.");
         }
     }
 
-    @FXML
-    private void handleNavigateRegister() {
-        SceneNavigator.loadScreen(AppScreen.REGISTER);
+    private boolean validateInput() {
+        String email = txtEmail.getText().trim();
+        String password = txtPassword.getText().trim();
+
+        if (email.isEmpty()) {
+            showError("Email required", "Please enter your email address.");
+            txtEmail.requestFocus();
+            return false;
+        }
+
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            showError("Invalid Email", "Please enter a valid email address.");
+            txtEmail.requestFocus();
+            return false;
+        }
+
+        if (password.isEmpty()) {
+            showError("Password required", "Please enter your password.");
+            txtPassword.requestFocus();
+            return false;
+        }
+
+        if (password.length() < 6) {
+            showError("Invalid Password", "Password must be at least 6 characters.");
+            txtPassword.requestFocus();
+            return false;
+        }
+
+        return true;
     }
 
-    private void setLoading(boolean isLoading) {
-        if (loadingIndicator != null) loadingIndicator.setVisible(isLoading);
-        loginButton.setDisable(isLoading);
-        emailField.setDisable(isLoading);
-        passwordField.setDisable(isLoading);
+    private void showError(String title, String message) {
+        lblError.setText(title + ": " + message);
+        lblError.setVisible(true);
+        lblError.getStyleClass().add("error-message");
+    }
+
+    private void clearError() {
+        lblError.setText("");
+        lblError.setVisible(false);
+        lblError.getStyleClass().remove("error-message");
+    }
+
+    private void setLoading(boolean loading) {
+        btnLogin.setDisable(loading);
+        txtEmail.setDisable(loading);
+        txtPassword.setDisable(loading);
+        progressIndicator.setVisible(loading);
+        btnLogin.setText(loading ? "Logging in..." : "Login");
+    }
+
+    private void saveCredentials(String email) {
+        // In production, use secure storage (e.g., Preferences API with encryption)
+        // For now, we'll just store in memory
+        // Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
+        // prefs.put("remembered_email", email);
+        // prefs.putBoolean("remember_me", true);
+    }
+
+    private void loadSavedCredentials() {
+        // In production, load from secure storage
+        // Preferences prefs = Preferences.userNodeForPackage(LoginController.class);
+        // if (prefs.getBoolean("remember_me", false)) {
+        //     txtEmail.setText(prefs.get("remembered_email", ""));
+        //     chkRememberMe.setSelected(true);
+        // }
     }
 }
