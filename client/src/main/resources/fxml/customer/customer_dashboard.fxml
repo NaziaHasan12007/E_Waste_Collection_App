@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.customer.CustomerDashboardController"
+            styleClass="root" prefWidth="1024" prefHeight="700">
+
+    <!-- Top Header -->
+    <top>
+        <VBox styleClass="card-top-bar" spacing="12">
+            <padding>
+                <Insets top="16" right="30" bottom="16" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Text text="♻️" styleClass="heading-1"/>
+                <VBox>
+                    <Text text="E-Waste Collection" styleClass="heading-1"/>
+                    <Label fx:id="lblWelcome" styleClass="subtext"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Logout" styleClass="button-secondary" onAction="#handleLogout"/>
+            </HBox>
+
+            <!-- Quick Stats -->
+            <HBox spacing="20" alignment="CENTER">
+                <VBox alignment="CENTER" styleClass="card" spacing="4" prefWidth="150">
+                    <Label text="Points" styleClass="subtext"/>
+                    <Label fx:id="lblPoints" text="0" styleClass="metric-value"/>
+                </VBox>
+                <VBox alignment="CENTER" styleClass="card" spacing="4" prefWidth="150">
+                    <Label text="Active Pickups" styleClass="subtext"/>
+                    <Label fx:id="lblActivePickups" text="0" styleClass="metric-value-accent"/>
+                </VBox>
+                <VBox alignment="CENTER" styleClass="card" spacing="4" prefWidth="150">
+                    <Label text="Total Recycled" styleClass="subtext"/>
+                    <Label fx:id="lblTotalRecycled" text="0 kg" styleClass="metric-value-warning"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Center Content -->
+    <center>
+        <HBox spacing="20" styleClass="root" VBox.vgrow="ALWAYS">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Left Column - Quick Actions -->
+            <VBox spacing="12" styleClass="card" prefWidth="200">
+                <Label text="Quick Actions" styleClass="heading-2"/>
+
+                <Button text="📦 Submit E-Waste" styleClass="button" prefHeight="40"
+                        onAction="#handleSubmitEWaste" maxWidth="Infinity"/>
+                <Button text="📋 View History" styleClass="button-secondary" prefHeight="40"
+                        onAction="#handleViewHistory" maxWidth="Infinity"/>
+                <Button text="🏆 View Rewards" styleClass="button-secondary" prefHeight="40"
+                        onAction="#handleViewRewards" maxWidth="Infinity"/>
+                <Button text="🔄 Refresh" styleClass="button-secondary" prefHeight="40"
+                        onAction="#handleRefresh" maxWidth="Infinity"/>
+
+                <Region VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- Right Column - Charts & Notifications -->
+            <VBox spacing="15" HBox.hgrow="ALWAYS">
+                <!-- Pie Chart -->
+                <VBox styleClass="card" spacing="10" VBox.vgrow="ALWAYS">
+                    <Label text="Waste Categories" styleClass="heading-2"/>
+                    <PieChart fx:id="chartWasteCategories" styleClass="card" prefHeight="200"
+                              legendVisible="true" labelsVisible="true"/>
+                </VBox>
+
+                <!-- Notifications -->
+                <VBox styleClass="card" spacing="10" prefHeight="150">
+                    <Label text="Notifications" styleClass="heading-2"/>
+                    <ListView fx:id="listNotifications" styleClass="table-view" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </center>
+
+    <!-- Bottom Footer -->
+    <bottom>
+        <HBox styleClass="card-top-bar" alignment="CENTER">
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
+            <Text text="© 2026 E-Waste Collection App | Making Earth Green" styleClass="subtext"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.customer.RewardViewController"
+            styleClass="root" prefWidth="850" prefHeight="600">
+
+    <top>
+        <VBox styleClass="card-top-bar" spacing="10">
+            <padding>
+                <Insets top="16" right="30" bottom="16" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Button text="← Back" styleClass="button-secondary" onAction="#handleBack"/>
+                <Text text="🏆 Rewards &amp; Points" styleClass="heading-1"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="🔄 Refresh" styleClass="button-secondary" onAction="#handleRefresh"/>
+            </HBox>
+
+            <Text text="Track your rewards and environmental impact" styleClass="subtext"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20" styleClass="root" VBox.vgrow="ALWAYS">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Reward Summary Cards -->
+            <HBox spacing="20" alignment="CENTER">
+                <VBox alignment="CENTER" styleClass="card" spacing="6" prefWidth="180">
+                    <Label text="Current Balance" styleClass="subtext"/>
+                    <Label fx:id="lblBalance" text="0" styleClass="metric-value"/>
+                </VBox>
+                <VBox alignment="CENTER" styleClass="card" spacing="6" prefWidth="180">
+                    <Label text="Total Earned" styleClass="subtext"/>
+                    <Label fx:id="lblTotalEarned" text="0" styleClass="metric-value-accent"/>
+                </VBox>
+                <VBox alignment="CENTER" styleClass="card" spacing="6" prefWidth="180">
+                    <Label text="Current Tier" styleClass="subtext"/>
+                    <Label fx:id="lblTier" text="BRONZE" styleClass="metric-value-warning"/>
+                </VBox>
+                <VBox alignment="CENTER" styleClass="card" spacing="6" prefWidth="180">
+                    <Label text="Carbon Credits" styleClass="subtext"/>
+                    <Label fx:id="lblCarbonCredits" text="0.0 kg" styleClass="metric-value-accent"/>
+                </VBox>
+            </HBox>
+
+            <!-- Progress to Next Tier -->
+            <VBox styleClass="card" spacing="10">
+                <Label text="Progress to Next Tier" styleClass="heading-2"/>
+                <ProgressBar fx:id="progressTier" styleClass="card" prefHeight="20" progress="0"/>
+                <Label fx:id="lblProgressText" text="0% - Points needed: 500" styleClass="subtext"/>
+            </VBox>
+
+            <!-- Transaction History -->
+            <VBox styleClass="card" spacing="10" VBox.vgrow="ALWAYS">
+                <Label text="Transaction History" styleClass="heading-2"/>
+                <TableView fx:id="tblTransactions" styleClass="table-view" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn text="Date" prefWidth="150" fx:id="colDate"/>
+                        <TableColumn text="Description" prefWidth="250" fx:id="colDescription"/>
+                        <TableColumn text="Points" prefWidth="100" fx:id="colPoints"/>
+                        <TableColumn text="Type" prefWidth="100" fx:id="colType"/>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                </TableView>
+            </VBox>
+
+            <!-- Progress Indicator -->
+            <ProgressIndicator fx:id="progressIndicator" visible="false" styleClass="progress-indicator"/>
+        </VBox>
+    </center>
+
+</BorderPane>

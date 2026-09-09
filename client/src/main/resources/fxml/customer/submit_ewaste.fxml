@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.customer.SubmitEWasteController"
+            styleClass="root" prefWidth="800" prefHeight="600">
+
+    <top>
+        <VBox styleClass="card-top-bar" spacing="10">
+            <padding>
+                <Insets top="16" right="30" bottom="16" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Button text="← Back" styleClass="button-secondary" onAction="#handleBack"/>
+                <Text text="Submit E-Waste" styleClass="heading-1"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Text text="♻️" styleClass="heading-1"/>
+            </HBox>
+
+            <Text text="Help us recycle electronic waste responsibly" styleClass="subtext"/>
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane styleClass="root" fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="16" styleClass="root" VBox.vgrow="ALWAYS">
+                    <padding>
+                        <Insets top="20" right="30" bottom="20" left="30"/>
+                    </padding>
+
+                    <!-- Error Label -->
+                    <Label fx:id="lblError" styleClass="badge-tag" visible="false" text=""
+                           textFill="#ef4444" wrapText="true"/>
+
+                    <!-- Item Name -->
+                    <VBox spacing="6">
+                        <Label text="Item Name" styleClass="subtext" textFill="#94a3b8"/>
+                        <TextField fx:id="txtItemName" promptText="e.g., Laptop, Mobile Phone" styleClass="text-field"/>
+                    </VBox>
+
+                    <!-- Category -->
+                    <VBox spacing="6">
+                        <Label text="Category" styleClass="subtext" textFill="#94a3b8"/>
+                        <ComboBox fx:id="cmbCategory" styleClass="text-field" promptText="Select category"/>
+                    </VBox>
+
+                    <!-- Weight & Quantity -->
+                    <HBox spacing="20">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Weight (kg)" styleClass="subtext" textFill="#94a3b8"/>
+                            <TextField fx:id="txtWeight" promptText="e.g., 2.5" styleClass="text-field"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Quantity" styleClass="subtext" textFill="#94a3b8"/>
+                            <TextField fx:id="txtQuantity" promptText="e.g., 1" styleClass="text-field"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Condition -->
+                    <VBox spacing="6">
+                        <Label text="Condition" styleClass="subtext" textFill="#94a3b8"/>
+                        <ComboBox fx:id="cmbCondition" styleClass="text-field" promptText="Select condition">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="GOOD"/>
+                                    <String fx:value="FAIR"/>
+                                    <String fx:value="POOR"/>
+                                    <String fx:value="BROKEN"/>
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+                    </VBox>
+
+                    <!-- Description -->
+                    <VBox spacing="6">
+                        <Label text="Description (Optional)" styleClass="subtext" textFill="#94a3b8"/>
+                        <TextArea fx:id="txtDescription" promptText="Any additional details about the item..."
+                                  styleClass="text-field" prefHeight="80" wrapText="true"/>
+                    </VBox>
+
+                    <!-- Estimated Points -->
+                    <HBox alignment="CENTER_LEFT" spacing="20" styleClass="card">
+                        <Label text="Estimated Points:" styleClass="heading-2"/>
+                        <Label fx:id="lblEstimatedPoints" text="0" styleClass="metric-value"/>
+                    </HBox>
+
+                    <!-- Submit Button -->
+                    <HBox spacing="15" alignment="CENTER">
+                        <Button text="Submit" styleClass="button-success" prefHeight="44" prefWidth="200"
+                                onAction="#handleSubmit"/>
+                        <Button text="Clear" styleClass="button-secondary" prefHeight="44" prefWidth="100"
+                                onAction="#handleClear"/>
+                    </HBox>
+
+                    <!-- Progress Indicator -->
+                    <ProgressIndicator fx:id="progressIndicator" visible="false" styleClass="progress-indicator"/>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

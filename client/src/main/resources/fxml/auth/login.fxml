@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ewaste.client.controller.LoginController"
+      alignment="CENTER" spacing="20" styleClass="root" prefWidth="420" prefHeight="550">
+
+    <!-- Logo & Title -->
+    <VBox alignment="CENTER" spacing="8">
+        <Text text="♻️" style="-fx-font-size: 48px;" styleClass="heading-1"/>
+        <Text text="E-Waste Collection" styleClass="heading-1"/>
+        <Text text="Sign in to your account" styleClass="subtext"/>
+    </VBox>
+
+    <!-- Error Label -->
+    <Label fx:id="lblError" styleClass="badge-tag" visible="false" text=""
+           textFill="#ef4444" wrapText="true" maxWidth="380"/>
+
+    <!-- Email Field -->
+    <VBox spacing="6" maxWidth="380">
+        <Label text="Email Address" styleClass="subtext" textFill="#94a3b8"/>
+        <TextField fx:id="txtEmail" promptText="Enter your email" styleClass="text-field" prefHeight="42"/>
+    </VBox>
+
+    <!-- Password Field -->
+    <VBox spacing="6" maxWidth="380">
+        <Label text="Password" styleClass="subtext" textFill="#94a3b8"/>
+        <PasswordField fx:id="txtPassword" promptText="Enter your password" styleClass="text-field" prefHeight="42"/>
+    </VBox>
+
+    <!-- Remember Me & Forgot Password -->
+    <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="380">
+        <CheckBox fx:id="chkRememberMe" text="Remember me" styleClass="subtext" textFill="#94a3b8"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Hyperlink text="Forgot password?" styleClass="subtext" textFill="#38bdf8"/>
+    </HBox>
+
+    <!-- Login Button -->
+    <Button fx:id="btnLogin" text="Sign In" styleClass="button" maxWidth="380" prefHeight="44">
+        <VBox.margin>
+            <Insets top="10"/>
+        </VBox.margin>
+    </Button>
+
+    <!-- Register Link -->
+    <HBox alignment="CENTER" spacing="6" maxWidth="380">
+        <Text text="Don't have an account?" styleClass="subtext"/>
+        <Button fx:id="btnRegister" text="Sign Up" styleClass="button-secondary"/>
+    </HBox>
+
+    <!-- Progress Indicator -->
+    <ProgressIndicator fx:id="progressIndicator" visible="false" styleClass="progress-indicator"/>
+
+</VBox>
