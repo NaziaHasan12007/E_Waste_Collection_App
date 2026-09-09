@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.admin.PickupManagementController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Navigation Bar -->
+    <top>
+        <HBox spacing="18.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <Button fx:id="backButton" text="← Dashboard" onAction="#handleBack" styleClass="button-secondary"/>
+            <VBox spacing="2.0">
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label text="Pickup Logistics &amp; Scheduling" styleClass="heading-1"/>
+                    <Label text="DISPATCH_CONSOLE" styleClass="badge-tag"/>
+                </HBox>
+                <Label text="Inspect incoming e-waste requests, override priorities, and assign field collectors" styleClass="subtext"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="refreshButton" text="Sync Queue" onAction="#handleRefresh" styleClass="button"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Main Content Workspace -->
+    <center>
+        <VBox spacing="18.0">
+            <padding>
+                <Insets top="22.0" right="28.0" bottom="22.0" left="28.0"/>
+            </padding>
+
+            <!-- Filter Controls Bar -->
+            <HBox spacing="15.0" alignment="CENTER_LEFT" styleClass="card">
+                <Label text="Filter State:" styleClass="heading-2"/>
+                <ComboBox fx:id="stateFilterCombo" prefWidth="180.0"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Manual Dispatch Target:" styleClass="heading-2"/>
+                <ComboBox fx:id="collectorAssignmentCombo" prefWidth="300.0" promptText="Select Eligible Collector..."/>
+                <Button fx:id="assignButton" text="Assign Collector" onAction="#handleAssignCollector"
+                        styleClass="button-success" disable="true"/>
+                <Button fx:id="cancelButton" text="Cancel Pickup" onAction="#handleCancelPickup"
+                        styleClass="button-danger" disable="true"/>
+            </HBox>
+
+            <!-- Pickups Table -->
+            <TableView fx:id="pickupsTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="65.0"/>
+                    <TableColumn fx:id="customerIdColumn" text="User ID" prefWidth="85.0"/>
+                    <TableColumn fx:id="addressColumn" text="Collection Address" prefWidth="340.0"/>
+                    <TableColumn fx:id="statusColumn" text="Current State" prefWidth="150.0"/>
+                    <TableColumn fx:id="priorityColumn" text="Urgency Score" prefWidth="130.0"/>
+                    <TableColumn fx:id="collectorColumn" text="Assigned Collector" prefWidth="170.0"/>
+                </columns>
+                <placeholder>
+                    <Label text="No pickup requests found matching the current lifecycle filter." styleClass="subtext"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewaste.client.controller.collector.AssignedTasksController"
+            prefHeight="740.0" prefWidth="1100.0" stylesheets="@../../css/admin.css">
+
+    <!-- Top Action Bar -->
+    <top>
+        <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="card-top-bar">
+            <Button fx:id="backButton" text="← Dashboard" onAction="#handleBack" styleClass="button-secondary"/>
+            <VBox spacing="2.0">
+                <Label text="Field Task Execution" styleClass="heading-1"/>
+                <Label text="Manage assigned pickups and complete center drop-offs" styleClass="subtext"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="refreshButton" text="Refresh Queue" onAction="#handleRefresh" styleClass="button"/>
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" prefWidth="26.0" prefHeight="26.0"/>
+        </HBox>
+    </top>
+
+    <!-- Task Table & Processing Bar -->
+    <center>
+        <VBox spacing="18.0">
+            <padding>
+                <Insets top="22.0" right="28.0" bottom="22.0" left="28.0"/>
+            </padding>
+
+            <TableView fx:id="tasksTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="80.0"/>
+                    <TableColumn fx:id="addressColumn" text="Pickup Location" prefWidth="390.0"/>
+                    <TableColumn fx:id="dateColumn" text="Scheduled Date" prefWidth="140.0"/>
+                    <TableColumn fx:id="timeColumn" text="Time Window" prefWidth="130.0"/>
+                    <TableColumn fx:id="statusColumn" text="Current State" prefWidth="170.0"/>
+                </columns>
+                <placeholder>
+                    <Label text="No active pickup tasks currently assigned to your route." styleClass="subtext"/>
+                </placeholder>
+            </TableView>
+
+            <!-- Lifecycle Action Controls -->
+            <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="card">
+                <Button fx:id="markCollectedButton" text="✔ Confirm Item Collection" onAction="#handleMarkCollected"
+                        styleClass="button-success" disable="true"/>
+
+                <Region prefWidth="30.0"/>
+
+                <Label text="Destination Facility:" styleClass="subtext"/>
+                <TextField fx:id="centerIdField" promptText="Center ID (e.g. 1)" prefWidth="170.0"/>
+                <Button fx:id="markDeliveredButton" text="Deliver to Facility" onAction="#handleMarkDelivered"
+                        styleClass="button" disable="true"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>
