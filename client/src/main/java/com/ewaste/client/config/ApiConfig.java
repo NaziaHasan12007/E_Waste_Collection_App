@@ -102,7 +102,7 @@ public class ApiConfig {
     }
 
     public String getBaseUrl() {
-        return baseUrl;
+        return getInstance().baseUrl;
     }
 
     public int getConnectionTimeout() {
@@ -111,5 +111,32 @@ public class ApiConfig {
 
     public int getReadTimeout() {
         return readTimeout;
+    }
+    /**
+     * Get processing base endpoint
+     */
+    public String getProcessingEndpoint() {
+        return baseUrl + "/processing";
+    }
+
+    /**
+     * Get processing records endpoint for a pickup
+     */
+    public String getProcessingRecordsEndpoint(long pickupId) {
+        return baseUrl + "/processing/records/" + pickupId;
+    }
+
+    /**
+     * Get recycling centers endpoint
+     */
+    public String getRecyclingCentersEndpoint() {
+        return baseUrl + "/processing/centers";
+    }
+
+    /**
+     * Get process item endpoint
+     */
+    public String getProcessItemEndpoint(long pickupId) {
+        return baseUrl + "/processing/" + pickupId + "/process";
     }
 }

@@ -66,13 +66,99 @@ public class UserSession {
         return hasRole("ADMIN");
     }
 
-    // Getters
+    // ========== GETTERS ==========
     public Long getUserId() { return userId; }
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
     public String getRole() { return role; }
     public String getToken() { return token; }
     public LocalDateTime getLoginTime() { return loginTime; }
+
+    // ========== SETTERS (Added for ApiClient compatibility) ==========
+
+    /**
+     * Set the authentication token
+     * Used for token validation and temporary token switching
+     */
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    /**
+     * Set user ID
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    /**
+     * Set full name
+     */
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    /**
+     * Set email
+     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    /**
+     * Set user role
+     */
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    /**
+     * Set authentication status
+     */
+    public void setAuthenticated(boolean authenticated) {
+        this.isAuthenticated = authenticated;
+    }
+
+    /**
+     * Set login time
+     */
+    public void setLoginTime(LocalDateTime loginTime) {
+        this.loginTime = loginTime;
+    }
+
+    // ========== ADDITIONAL HELPER METHODS ==========
+
+    /**
+     * Check if session is active (not expired)
+     * Session expires after 8 hours
+     */
+    public boolean isSessionActive() {
+        if (!isAuthenticated() || loginTime == null) return false;
+        LocalDateTime expiryTime = loginTime.plusHours(8);
+        return LocalDateTime.now().isBefore(expiryTime);
+    }
+
+    /**
+     * Refresh session to extend expiry
+     */
+    public void refreshSession() {
+        this.loginTime = LocalDateTime.now();
+    }
+
+    /**
+     * Get user's display name (full name or email)
+     */
+    public String getDisplayName() {
+        return fullName != null && !fullName.isBlank() ? fullName : email;
+    }
+
+    /**
+     * Clear sensitive data (token and email) for security
+     */
+    public void clearSensitiveData() {
+        this.token = null;
+        this.email = null;
+    }
 
     @Override
     public String toString() {

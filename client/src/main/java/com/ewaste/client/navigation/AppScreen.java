@@ -21,6 +21,7 @@ public enum AppScreen {
     // Admin Screens
     ADMIN_DASHBOARD("/fxml/admin/admin_dashboard.fxml", "Admin Dashboard"),
     PICKUP_MANAGEMENT("/fxml/admin/pickup_management.fxml", "Pickup Management"),
+    COLLECTOR_MANAGEMENT("/fxml/admin/collector_management.fxml", "Collector Management"),
     INSPECTION_PROCESSING("/fxml/admin/inspection_processing.fxml", "Inspection & Processing"),
     ANALYTICS_REPORTING("/fxml/admin/analytics_view.fxml", "Analytics & Reporting");
 

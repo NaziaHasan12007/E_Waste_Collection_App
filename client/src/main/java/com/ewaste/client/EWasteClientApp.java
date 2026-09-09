@@ -1,7 +1,7 @@
 package com.ewaste.client;
 
-import com.ewaste.client.api.ApiConfig;
-import com.ewaste.client.api.AppScreen;
+import com.ewaste.client.config.ApiConfig;
+import com.ewaste.client.navigation.AppScreen;
 import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.navigation.SceneNavigator;
 import com.ewaste.client.session.UserSession;

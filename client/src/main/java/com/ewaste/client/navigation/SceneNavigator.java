@@ -1,24 +1,20 @@
 package com.ewaste.client.navigation;
 
-import com.ewaste.client.session.UserSession;
-import javafx.scene.Parent;
+import com.ewaste.client.EWasteClientApp;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.util.Stack;
 
-/**
- * Manages scene navigation within the application
- */
 public class SceneNavigator {
 
     private static SceneNavigator instance;
-
     private Stage primaryStage;
-    private final Map<AppScreen, Scene> sceneCache = new HashMap<>();
+    private Stack<AppScreen> screenHistory = new Stack<>();
     private AppScreen currentScreen;
-    private AppScreen previousScreen;
 
     private SceneNavigator() {}
 
@@ -29,92 +25,53 @@ public class SceneNavigator {
         return instance;
     }
 
-    public void initialize(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        this.primaryStage.setOnCloseRequest(event -> {
-            // Handle application shutdown
-            UserSession.getInstance().endSession();
-        });
+    public void setPrimaryStage(Stage stage) {
+        this.primaryStage = stage;
     }
 
-    /**
-     * Navigate to a screen
-     */
     public void navigateTo(AppScreen screen) {
-        navigateTo(screen, true);
-    }
-
-    /**
-     * Navigate to a screen with option to cache
-     */
-    public void navigateTo(AppScreen screen, boolean cache) {
-        if (primaryStage == null) {
-            throw new IllegalStateException("SceneNavigator not initialized. Call initialize() first.");
-        }
+        if (screen == null) return;
 
         try {
-            Scene scene;
-
-            if (cache && sceneCache.containsKey(screen)) {
-                scene = sceneCache.get(screen);
-            } else {
-                Parent root = ViewLoader.loadView(screen);
-                scene = new Scene(root);
-                if (cache) {
-                    sceneCache.put(screen, scene);
-                }
-            }
-
-            // Update screen tracking
+            // Store current screen in history if not going back
             if (currentScreen != null) {
-                previousScreen = currentScreen;
+                screenHistory.push(currentScreen);
             }
-            currentScreen = screen;
 
-            // Set scene and show
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(screen.getFxmlPath()));
+            Pane root = loader.load();
+
+            // Get controller and set stage if it's a BaseController
+            Object controller = loader.getController();
+            if (controller instanceof com.ewaste.client.controller.BaseController) {
+                ((com.ewaste.client.controller.BaseController) controller).setPrimaryStage(primaryStage);
+            }
+
+            Scene scene = new Scene(root);
             primaryStage.setScene(scene);
-            primaryStage.setTitle("E-Waste Management - " + screen.getTitle());
+            primaryStage.setTitle(screen.getTitle());
             primaryStage.show();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to navigate to: " + screen, e);
+            currentScreen = screen;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to load screen: " + screen.getFxmlPath(), e);
         }
     }
 
-    /**
-     * Navigate back to previous screen
-     */
     public void navigateBack() {
-        if (previousScreen != null) {
+        if (!screenHistory.isEmpty()) {
+            AppScreen previousScreen = screenHistory.pop();
             navigateTo(previousScreen);
         }
     }
 
-    /**
-     * Clear the scene cache
-     */
-    public void clearCache() {
-        sceneCache.clear();
+    public void clearHistory() {
+        screenHistory.clear();
     }
 
-    /**
-     * Get the current screen
-     */
     public AppScreen getCurrentScreen() {
         return currentScreen;
-    }
-
-    /**
-     * Get the previous screen
-     */
-    public AppScreen getPreviousScreen() {
-        return previousScreen;
-    }
-
-    /**
-     * Get the primary stage
-     */
-    public Stage getPrimaryStage() {
-        return primaryStage;
     }
 }

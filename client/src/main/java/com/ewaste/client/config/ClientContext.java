@@ -1,24 +1,26 @@
 package com.ewaste.client.config;
 
-import com.ewaste.client.api.ApiClient;
-import com.ewaste.client.api.ApiClientImpl;
-import com.ewaste.client.session.UserSession;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ewaste.client.api.*;
 
-/**
- * Application context container for shared components
- */
 public class ClientContext {
 
     private static ClientContext instance;
-
-    private ApiClient apiClient;
-    private ObjectMapper objectMapper;
-    private UserSession userSession;
+    private final AuthApiClient authApiClient;
+    private final EWasteApiClient eWasteApiClient;
+    private final PickupApiClient pickupApiClient;
+    private final RewardApiClient rewardApiClient;
+    private final CollectorApiClient collectorApiClient;
+    private final ReportApiClient reportApiClient;
+    private final ProcessingApiClient processingApiClient;
 
     private ClientContext() {
-        initialize();
+        this.authApiClient = AuthApiClient.getInstance();
+        this.eWasteApiClient = EWasteApiClient.getInstance();
+        this.pickupApiClient = PickupApiClient.getInstance();
+        this.rewardApiClient = RewardApiClient.getInstance();
+        this.collectorApiClient = CollectorApiClient.getInstance();
+        this.reportApiClient = ReportApiClient.getInstance();
+        this.processingApiClient = ProcessingApiClient.getInstance();
     }
 
     public static ClientContext getInstance() {
@@ -28,32 +30,11 @@ public class ClientContext {
         return instance;
     }
 
-    private void initialize() {
-        // Initialize ObjectMapper
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-
-        // Initialize UserSession
-        userSession = UserSession.getInstance();
-
-        // Initialize ApiClient
-        apiClient = new ApiClientImpl();
-    }
-
-    public ApiClient getApiClient() {
-        return apiClient;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
-    }
-
-    public UserSession getUserSession() {
-        return userSession;
-    }
-
-    public void reset() {
-        userSession.endSession();
-        // Re-initialize API client if needed
-    }
+    public AuthApiClient getAuthApiClient() { return authApiClient; }
+    public EWasteApiClient getEWasteApiClient() { return eWasteApiClient; }
+    public PickupApiClient getPickupApiClient() { return pickupApiClient; }
+    public RewardApiClient getRewardApiClient() { return rewardApiClient; }
+    public CollectorApiClient getCollectorApiClient() { return collectorApiClient; }
+    public ReportApiClient getReportApiClient() { return reportApiClient; }
+    public ProcessingApiClient getProcessingApiClient() { return processingApiClient; }
 }
