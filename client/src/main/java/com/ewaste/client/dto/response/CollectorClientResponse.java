@@ -78,11 +78,47 @@ public class CollectorClientResponse {
         this.isAvailable = isAvailable;
     }
 
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Calculate utilization percentage of collector's capacity
+     */
     public double getUtilizationPercentage() {
         if (maxCapacityKg == null || maxCapacityKg == 0) {
             return 0.0;
         }
         return (currentWorkloadKg != null ? currentWorkloadKg : 0.0) / maxCapacityKg * 100;
+    }
+
+    /**
+     * Check if collector can accept a new pickup of given weight
+     */
+    public boolean canAcceptPickup(double weightKg) {
+        if (isAvailable == null || !isAvailable) return false;
+        if (maxCapacityKg == null || currentWorkloadKg == null) return false;
+        return (currentWorkloadKg + weightKg) <= maxCapacityKg;
+    }
+
+    /**
+     * Get availability status as readable string
+     */
+    public String getAvailabilityDisplay() {
+        return isAvailable != null && isAvailable ? "Available" : "Unavailable";
+    }
+
+    /**
+     * Get remaining capacity
+     */
+    public double getRemainingCapacity() {
+        if (maxCapacityKg == null || currentWorkloadKg == null) return 0.0;
+        return Math.max(0, maxCapacityKg - currentWorkloadKg);
+    }
+
+    /**
+     * Check if collector is overloaded (over 90% capacity)
+     */
+    public boolean isOverloaded() {
+        return getUtilizationPercentage() > 90.0;
     }
 
     @Override
@@ -94,6 +130,7 @@ public class CollectorClientResponse {
                 ", maxCapacityKg=" + maxCapacityKg +
                 ", currentWorkloadKg=" + currentWorkloadKg +
                 ", isAvailable=" + isAvailable +
+                ", utilization=" + String.format("%.1f%%", getUtilizationPercentage()) +
                 '}';
     }
 }

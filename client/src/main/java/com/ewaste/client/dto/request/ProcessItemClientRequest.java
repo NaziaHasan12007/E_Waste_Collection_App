@@ -49,6 +49,64 @@ public class ProcessItemClientRequest {
         this.pointsAwarded = pointsAwarded;
     }
 
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Validate that all required fields are present and valid
+     */
+    public boolean isValid() {
+        return pickupId != null && pickupId > 0
+                && workflowType != null && !workflowType.isBlank()
+                && centerId != null && centerId > 0
+                && pointsAwarded != null && pointsAwarded >= 0;
+    }
+
+    /**
+     * Get validation error messages
+     */
+    public String getValidationErrors() {
+        StringBuilder errors = new StringBuilder();
+        if (pickupId == null || pickupId <= 0) {
+            errors.append("Invalid pickup ID; ");
+        }
+        if (workflowType == null || workflowType.isBlank()) {
+            errors.append("Workflow type is required; ");
+        }
+        if (centerId == null || centerId <= 0) {
+            errors.append("Invalid center ID; ");
+        }
+        if (pointsAwarded == null || pointsAwarded < 0) {
+            errors.append("Points awarded must be >= 0; ");
+        }
+        return errors.toString();
+    }
+
+    /**
+     * Get workflow type display name
+     */
+    public String getWorkflowDisplay() {
+        if (workflowType == null) return "Unknown";
+        return switch (workflowType.toUpperCase()) {
+            case "RECYCLING" -> "♻️ Recycling";
+            case "REUSE" -> "🔄 Reuse";
+            case "REPAIR" -> "🔧 Repair";
+            case "RECOVERY" -> "⚡ Recovery";
+            case "DISPOSAL" -> "🗑️ Disposal";
+            default -> workflowType;
+        };
+    }
+
+    /**
+     * Check if workflow is valid
+     */
+    public boolean isValidWorkflow() {
+        if (workflowType == null) return false;
+        return switch (workflowType.toUpperCase()) {
+            case "RECYCLING", "REUSE", "REPAIR", "RECOVERY", "DISPOSAL" -> true;
+            default -> false;
+        };
+    }
+
     @Override
     public String toString() {
         return "ProcessItemClientRequest{" +
@@ -56,6 +114,7 @@ public class ProcessItemClientRequest {
                 ", workflowType='" + workflowType + '\'' +
                 ", centerId=" + centerId +
                 ", pointsAwarded=" + pointsAwarded +
+                ", isValid=" + isValid() +
                 '}';
     }
 }

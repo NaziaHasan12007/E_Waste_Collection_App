@@ -51,6 +51,88 @@ public class RewardClientResponse {
         this.balance = balance;
     }
 
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Check if customer has enough points for redemption
+     */
+    public boolean hasEnoughPoints(int requiredPoints) {
+        return balance != null && balance >= requiredPoints;
+    }
+
+    /**
+     * Get tier based on points balance
+     */
+    public String getTier() {
+        if (balance == null) return "BRONZE";
+        if (balance >= 2000) return "PLATINUM";
+        if (balance >= 1000) return "GOLD";
+        if (balance >= 500) return "SILVER";
+        return "BRONZE";
+    }
+
+    /**
+     * Get points needed to reach next tier
+     */
+    public int getPointsToNextTier() {
+        if (balance == null) return 500;
+        String tier = getTier();
+        return switch (tier) {
+            case "BRONZE" -> Math.max(0, 500 - balance);
+            case "SILVER" -> Math.max(0, 1000 - balance);
+            case "GOLD" -> Math.max(0, 2000 - balance);
+            default -> 0;
+        };
+    }
+
+    /**
+     * Get tier display with emoji
+     */
+    public String getTierDisplay() {
+        String tier = getTier();
+        return switch (tier) {
+            case "PLATINUM" -> "🏆 PLATINUM";
+            case "GOLD" -> "🥇 GOLD";
+            case "SILVER" -> "🥈 SILVER";
+            default -> "🥉 BRONZE";
+        };
+    }
+
+    /**
+     * Calculate points needed for next reward level
+     */
+    public int getPointsToNextLevel() {
+        int nextLevel = getPointsToNextTier();
+        return Math.max(0, nextLevel);
+    }
+
+    /**
+     * Get progress percentage to next tier (0-100)
+     */
+    public int getProgressToNextTier() {
+        if (balance == null) return 0;
+        String tier = getTier();
+        int currentTierPoints = switch (tier) {
+            case "BRONZE" -> 0;
+            case "SILVER" -> 500;
+            case "GOLD" -> 1000;
+            case "PLATINUM" -> 2000;
+            default -> 0;
+        };
+        int nextTierPoints = switch (tier) {
+            case "BRONZE" -> 500;
+            case "SILVER" -> 1000;
+            case "GOLD" -> 2000;
+            default -> 2000;
+        };
+
+        if (nextTierPoints <= currentTierPoints) return 100;
+
+        int progress = balance - currentTierPoints;
+        int total = nextTierPoints - currentTierPoints;
+        return Math.min(100, (progress * 100) / total);
+    }
+
     @Override
     public String toString() {
         return "RewardClientResponse{" +
@@ -59,6 +141,7 @@ public class RewardClientResponse {
                 ", customerName='" + customerName + '\'' +
                 ", pointsEarned=" + pointsEarned +
                 ", balance=" + balance +
+                ", tier=" + getTier() +
                 '}';
     }
 }

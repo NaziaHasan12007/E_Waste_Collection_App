@@ -32,6 +32,7 @@ public class LoginClientRequest {
     public String toString() {
         return "LoginClientRequest{" +
                 "email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
                 '}';
     }
 }
