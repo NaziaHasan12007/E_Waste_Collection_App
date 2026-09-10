@@ -51,7 +51,7 @@ class NotificationObserverTest {
         pickup.setPickupId(10L);
         pickup.setUserId(99L);
         pickup.setCollectorId(77L);
-        pickup.setStatus(PickupStatus.ASSIGNED);
+        pickup.setState(PickupStatus.ASSIGNED);
 
         PickupEvent event = new PickupEvent(pickup, PickupStatus.REQUESTED, "Collector Assigned");
         publisher.publish(event);

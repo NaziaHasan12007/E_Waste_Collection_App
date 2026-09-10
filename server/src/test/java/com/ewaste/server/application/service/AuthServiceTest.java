@@ -3,11 +3,9 @@ package com.ewaste.server.application.service;
 import com.ewaste.server.api.dto.request.LoginRequestDto;
 import com.ewaste.server.api.dto.request.RegisterRequestDto;
 import com.ewaste.server.api.dto.response.AuthResponseDto;
-import com.ewaste.server.common.exception.DuplicateResourceException;
-import com.ewaste.server.common.exception.UnauthorizedException;
-import com.ewaste.server.common.validation.UserValidator;
+import com.ewaste.server.domain.model.user.Role;
 import com.ewaste.server.domain.model.user.User;
-import com.ewaste.server.domain.model.user.UserRole;
+import com.ewaste.server.domain.repository.CollectorRepository;
 import com.ewaste.server.domain.repository.UserRepository;
 import com.ewaste.server.infrastructure.security.JwtProvider;
 import com.ewaste.server.infrastructure.security.PasswordEncoder;
@@ -28,20 +26,20 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
 
     private UserRepository userRepository;
+    private CollectorRepository collectorRepository;
     private PasswordEncoder passwordEncoder;
     private JwtProvider jwtProvider;
-    private UserValidator userValidator;
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
+        collectorRepository = Mockito.mock(CollectorRepository.class);
         passwordEncoder = Mockito.mock(PasswordEncoder.class);
         jwtProvider = Mockito.mock(JwtProvider.class);
-        userValidator = Mockito.mock(UserValidator.class);
 
-        authService = new AuthService(userRepository, passwordEncoder, jwtProvider, userValidator);
+        authService = new AuthService(userRepository, jwtProvider, passwordEncoder, collectorRepository);
     }
 
     @Test
@@ -53,7 +51,7 @@ class AuthServiceTest {
         existingUser.setUserId(5L);
         existingUser.setEmail("alex@domain.org");
         existingUser.setPasswordHash("hashed_pw");
-        existingUser.setRole(UserRole.CUSTOMER);
+        existingUser.setRole(Role.CUSTOMER);
         existingUser.setFullName("Alex Rivera");
 
         when(userRepository.findByEmail("alex@domain.org")).thenReturn(Optional.of(existingUser));
@@ -80,7 +78,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("alex@domain.org")).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("WrongPassword", "hashed_pw")).thenReturn(false);
 
-        assertThrows(UnauthorizedException.class, () -> authService.login(loginDto));
+        assertThrows(RuntimeException.class, () -> authService.login(loginDto));
     }
 
     @Test
@@ -90,9 +88,9 @@ class AuthServiceTest {
         registerDto.setEmail("existing@domain.org");
         registerDto.setPassword("Secret123!");
 
-        when(userRepository.findByEmail("existing@domain.org")).thenReturn(Optional.of(new User()));
+        when(userRepository.existsByEmail("existing@domain.org")).thenReturn(true);
 
-        assertThrows(DuplicateResourceException.class, () -> authService.register(registerDto));
+        assertThrows(RuntimeException.class, () -> authService.register(registerDto));
         verify(userRepository, never()).save(any());
     }
 }

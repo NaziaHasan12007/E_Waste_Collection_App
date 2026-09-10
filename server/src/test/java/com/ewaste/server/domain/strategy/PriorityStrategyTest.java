@@ -1,7 +1,9 @@
 package com.ewaste.server.domain.strategy;
 
 import com.ewaste.server.domain.model.ewaste.BatteryWaste;
+import com.ewaste.server.domain.model.ewaste.EWasteCategory;
 import com.ewaste.server.domain.model.ewaste.LaptopWaste;
+import com.ewaste.server.domain.model.ewaste.WasteCondition;
 import com.ewaste.server.domain.model.pickup.PickupItem;
 import com.ewaste.server.domain.model.pickup.PickupRequest;
 import com.ewaste.server.domain.pattern.strategy.priority.CompositePriorityStrategy;
@@ -23,12 +25,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class PriorityStrategyTest {
 
     private PickupRequest pickup;
+    private EWasteCategory laptopCategory;
+    private EWasteCategory batteryCategory;
 
     @BeforeEach
     void setUp() {
         pickup = new PickupRequest();
         pickup.setItems(new ArrayList<>());
         pickup.setCreatedAt(LocalDateTime.now().minusHours(10));
+        laptopCategory = new EWasteCategory("Laptop", 12.0, false);
+        batteryCategory = new EWasteCategory("Battery", 8.0, true);
     }
 
     @Test
@@ -37,15 +43,18 @@ class PriorityStrategyTest {
         HazardousPriorityStrategy strategy = new HazardousPriorityStrategy();
 
         // Non-hazardous setup
-        LaptopWaste safeLaptop = new LaptopWaste();
-        safeLaptop.setHazardous(false);
-        pickup.getItems().add(new PickupItem(1L, safeLaptop));
+        LaptopWaste safeLaptop = new LaptopWaste(
+                laptopCategory, "Safe Laptop", WasteCondition.WORKING, 2.0, false, true, 14.0
+        );
+        pickup.getItems().add(new PickupItem(pickup, safeLaptop));
         double nonHazardousScore = strategy.calculatePriority(pickup);
 
         // Hazardous item addition
-        BatteryWaste toxicBattery = new BatteryWaste();
-        toxicBattery.setHazardous(true);
-        pickup.getItems().add(new PickupItem(2L, toxicBattery));
+        BatteryWaste toxicBattery = new BatteryWaste(
+                batteryCategory, "Toxic Battery", WasteCondition.NON_FUNCTIONAL, 1.0,
+                BatteryWaste.BatteryType.LITHIUM_ION, 3000, true
+        );
+        pickup.getItems().add(new PickupItem(pickup, toxicBattery));
         double hazardousScore = strategy.calculatePriority(pickup);
 
         assertTrue(hazardousScore > nonHazardousScore, "Hazardous cargo must receive higher operational urgency.");
@@ -56,14 +65,16 @@ class PriorityStrategyTest {
     void testWeightPriorityScoring() {
         WeightPriorityStrategy strategy = new WeightPriorityStrategy();
 
-        LaptopWaste lightItem = new LaptopWaste();
-        lightItem.setWeightKg(10.0);
-        pickup.getItems().add(new PickupItem(1L, lightItem));
+        LaptopWaste lightItem = new LaptopWaste(
+                laptopCategory, "Light Laptop", WasteCondition.WORKING, 10.0, false, false, 13.0
+        );
+        pickup.getItems().add(new PickupItem(pickup, lightItem));
         double lightScore = strategy.calculatePriority(pickup);
 
-        LaptopWaste heavyItem = new LaptopWaste();
-        heavyItem.setWeightKg(90.0);
-        pickup.getItems().add(new PickupItem(2L, heavyItem));
+        LaptopWaste heavyItem = new LaptopWaste(
+                laptopCategory, "Heavy Laptop", WasteCondition.WORKING, 90.0, false, false, 17.0
+        );
+        pickup.getItems().add(new PickupItem(pickup, heavyItem));
         double heavyScore = strategy.calculatePriority(pickup);
 
         assertTrue(heavyScore > lightScore);
@@ -87,10 +98,11 @@ class PriorityStrategyTest {
     void testCompositePriorityScoring() {
         CompositePriorityStrategy composite = new CompositePriorityStrategy();
 
-        BatteryWaste hazardousBattery = new BatteryWaste();
-        hazardousBattery.setHazardous(true);
-        hazardousBattery.setWeightKg(25.0);
-        pickup.getItems().add(new PickupItem(1L, hazardousBattery));
+        BatteryWaste hazardousBattery = new BatteryWaste(
+                batteryCategory, "Hazardous Battery", WasteCondition.NON_FUNCTIONAL, 25.0,
+                BatteryWaste.BatteryType.LEAD_ACID, 12000, false
+        );
+        pickup.getItems().add(new PickupItem(pickup, hazardousBattery));
 
         double compositeScore = composite.calculatePriority(pickup);
         assertTrue(compositeScore > 0.0);

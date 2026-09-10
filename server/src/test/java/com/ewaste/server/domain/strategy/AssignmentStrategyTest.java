@@ -3,6 +3,8 @@ package com.ewaste.server.domain.strategy;
 import com.ewaste.server.domain.model.collector.Collector;
 import com.ewaste.server.domain.model.collector.VehicleType;
 import com.ewaste.server.domain.model.ewaste.BatteryWaste;
+import com.ewaste.server.domain.model.ewaste.EWasteCategory;
+import com.ewaste.server.domain.model.ewaste.WasteCondition;
 import com.ewaste.server.domain.model.pickup.PickupItem;
 import com.ewaste.server.domain.model.pickup.PickupRequest;
 import com.ewaste.server.domain.pattern.strategy.assignment.LeastBusyCollectorStrategy;
@@ -25,6 +27,7 @@ class AssignmentStrategyTest {
 
     private List<Collector> collectors;
     private PickupRequest pickup;
+    private EWasteCategory batteryCategory;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +55,7 @@ class AssignmentStrategyTest {
         pickup = new PickupRequest();
         pickup.setAddress("42 Market Street, Zone South");
         pickup.setItems(new ArrayList<>());
+        batteryCategory = new EWasteCategory("Battery", 8.0, true);
     }
 
     @Test
@@ -79,9 +83,16 @@ class AssignmentStrategyTest {
     void testSpecialistCollectorSelection() {
         SpecialistCollectorStrategy strategy = new SpecialistCollectorStrategy();
 
-        BatteryWaste toxicItem = new BatteryWaste();
-        toxicItem.setHazardous(true);
-        pickup.getItems().add(new PickupItem(1L, toxicItem));
+        BatteryWaste toxicItem = new BatteryWaste(
+                batteryCategory,
+                "Li-Ion Pack",
+                WasteCondition.NON_FUNCTIONAL,
+                0.5,
+                BatteryWaste.BatteryType.LITHIUM_ION,
+                2500,
+                false
+        );
+        pickup.getItems().add(new PickupItem(pickup, toxicItem));
 
         Optional<Collector> selected = strategy.selectCollector(pickup, collectors);
         assertTrue(selected.isPresent());

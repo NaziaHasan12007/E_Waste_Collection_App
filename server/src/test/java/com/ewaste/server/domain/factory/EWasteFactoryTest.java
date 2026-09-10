@@ -13,28 +13,46 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class EWasteFactoryTest {
 
-    private EWasteFactory factory;
+    private EWasteCategory category;
 
     @BeforeEach
     void setUp() {
-        factory = new EWasteFactory();
+        category = new EWasteCategory("General", 10.0, false);
     }
 
     @Test
     @DisplayName("Should instantiate LaptopWaste with proper category and attributes")
     void testCreateLaptopWaste() {
-        EWasteItem item = factory.createItem("LAPTOP", "ThinkPad X1", 1.4, WasteCondition.USED);
+        EWasteFactory.EWasteItemRequest request = new EWasteFactory.EWasteItemRequest()
+                .setType(EWasteFactory.EWasteType.LAPTOP)
+                .setCategory(category)
+                .setModelName("ThinkPad X1")
+                .setWeightKg(1.4)
+                .setCondition(WasteCondition.MINOR_DAMAGE)
+                .setHasBattery(true)
+                .setHasHardDrive(true)
+                .setScreenSizeInches(14.0);
+        EWasteItem item = EWasteFactory.createEWasteItem(request);
 
         assertNotNull(item);
         assertInstanceOf(LaptopWaste.class, item);
-        assertEquals("ThinkPad X1", item.getModel());
+        assertEquals("ThinkPad X1", item.getModelName());
         assertEquals(1.4, item.getWeightKg());
     }
 
     @Test
     @DisplayName("Should instantiate BatteryWaste and flag chemical hazard defaults")
     void testCreateBatteryWasteHazardousFlag() {
-        EWasteItem item = factory.createItem("BATTERY", "Li-Ion Pack", 0.5, WasteCondition.DAMAGED);
+        EWasteFactory.EWasteItemRequest request = new EWasteFactory.EWasteItemRequest()
+                .setType(EWasteFactory.EWasteType.BATTERY)
+                .setCategory(category)
+                .setModelName("Li-Ion Pack")
+                .setWeightKg(0.5)
+                .setCondition(WasteCondition.MAJOR_DAMAGE)
+                .setBatteryType(BatteryWaste.BatteryType.LITHIUM_ION)
+                .setCapacityMah(2500)
+                .setSwollenOrLeaking(false);
+        EWasteItem item = EWasteFactory.createEWasteItem(request);
 
         assertNotNull(item);
         assertInstanceOf(BatteryWaste.class, item);
@@ -45,6 +63,6 @@ class EWasteFactoryTest {
     @DisplayName("Should throw IllegalArgumentException when given unrecognized category name")
     void testInvalidCategoryThrowsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                factory.createItem("NUCLEAR_REACTOR", "Core", 5000.0, WasteCondition.DAMAGED));
+                EWasteFactory.EWasteType.fromString("NUCLEAR_REACTOR"));
     }
 }
