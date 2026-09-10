@@ -141,6 +141,11 @@ public class CustomerDashboardController extends BaseController {
     }
 
     @FXML
+    private void handleRedeemPoints() {
+        navigateTo(AppScreen.REWARD_LEDGER);
+    }
+
+    @FXML
     private void handleRefresh() {
         loadDashboardData();
     }

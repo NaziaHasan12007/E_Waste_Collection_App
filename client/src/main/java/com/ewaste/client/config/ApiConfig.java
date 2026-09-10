@@ -89,6 +89,10 @@ public class ApiConfig {
         return baseUrl + "/rewards/" + customerId;
     }
 
+    public String getRewardRedemptionEndpoint(Long customerId) {
+        return getRewardsEndpoint(customerId) + "/redeem";
+    }
+
     public String getReportsSummaryEndpoint() {
         return baseUrl + "/reports/summary";
     }

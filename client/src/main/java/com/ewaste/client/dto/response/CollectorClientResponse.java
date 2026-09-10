@@ -1,9 +1,12 @@
 package com.ewaste.client.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class CollectorClientResponse {
 
     private Long collectorId;
     private Long userId;
+    @JsonProperty("name")
     private String fullName;
     private String email;
     private String vehicleType;

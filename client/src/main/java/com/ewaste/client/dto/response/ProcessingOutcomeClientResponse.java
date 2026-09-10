@@ -92,6 +92,9 @@ public class ProcessingOutcomeClientResponse {
     public String getWorkflowDisplay() {
         if (workflowType == null) return "Unknown";
         return switch (workflowType.toUpperCase()) {
+            case "RECYCLE" -> "♻️ Recycling";
+            case "REFURBISH" -> "🔄 Refurbish";
+            case "HAZARDOUS_DISPOSAL" -> "⚠️ Hazardous Disposal";
             case "RECYCLING" -> "♻️ Recycling";
             case "REUSE" -> "🔄 Reuse";
             case "REPAIR" -> "🔧 Repair";

@@ -2,35 +2,36 @@ package com.ewaste.client.dto.request;
 
 public class ProcessItemClientRequest {
 
-    private Long pickupId;
-    private String workflowType;
+    private Long itemId;
     private Long centerId;
-    private Integer pointsAwarded;
+    private String inspectionNotes;
+    private String processingResult;
 
     public ProcessItemClientRequest() {}
 
-    public ProcessItemClientRequest(Long pickupId, String workflowType, Long centerId, Integer pointsAwarded) {
-        this.pickupId = pickupId;
-        this.workflowType = workflowType;
+    public ProcessItemClientRequest(Long itemId, Long centerId, String inspectionNotes,
+                                    String processingResult) {
+        this.itemId = itemId;
         this.centerId = centerId;
-        this.pointsAwarded = pointsAwarded;
+        this.inspectionNotes = inspectionNotes;
+        this.processingResult = processingResult;
     }
 
     // Getters and Setters
-    public Long getPickupId() {
-        return pickupId;
+    public Long getItemId() {
+        return itemId;
     }
 
-    public void setPickupId(Long pickupId) {
-        this.pickupId = pickupId;
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
-    public String getWorkflowType() {
-        return workflowType;
+    public String getProcessingResult() {
+        return processingResult;
     }
 
-    public void setWorkflowType(String workflowType) {
-        this.workflowType = workflowType;
+    public void setProcessingResult(String processingResult) {
+        this.processingResult = processingResult;
     }
 
     public Long getCenterId() {
@@ -41,12 +42,12 @@ public class ProcessItemClientRequest {
         this.centerId = centerId;
     }
 
-    public Integer getPointsAwarded() {
-        return pointsAwarded;
+    public String getInspectionNotes() {
+        return inspectionNotes;
     }
 
-    public void setPointsAwarded(Integer pointsAwarded) {
-        this.pointsAwarded = pointsAwarded;
+    public void setInspectionNotes(String inspectionNotes) {
+        this.inspectionNotes = inspectionNotes;
     }
 
     // ========== HELPER METHODS ==========
@@ -55,10 +56,9 @@ public class ProcessItemClientRequest {
      * Validate that all required fields are present and valid
      */
     public boolean isValid() {
-        return pickupId != null && pickupId > 0
-                && workflowType != null && !workflowType.isBlank()
+        return itemId != null && itemId > 0
                 && centerId != null && centerId > 0
-                && pointsAwarded != null && pointsAwarded >= 0;
+                && processingResult != null && !processingResult.isBlank();
     }
 
     /**
@@ -66,17 +66,14 @@ public class ProcessItemClientRequest {
      */
     public String getValidationErrors() {
         StringBuilder errors = new StringBuilder();
-        if (pickupId == null || pickupId <= 0) {
-            errors.append("Invalid pickup ID; ");
-        }
-        if (workflowType == null || workflowType.isBlank()) {
-            errors.append("Workflow type is required; ");
+        if (itemId == null || itemId <= 0) {
+            errors.append("Invalid item ID; ");
         }
         if (centerId == null || centerId <= 0) {
             errors.append("Invalid center ID; ");
         }
-        if (pointsAwarded == null || pointsAwarded < 0) {
-            errors.append("Points awarded must be >= 0; ");
+        if (processingResult == null || processingResult.isBlank()) {
+            errors.append("Processing result is required; ");
         }
         return errors.toString();
     }
@@ -85,14 +82,14 @@ public class ProcessItemClientRequest {
      * Get workflow type display name
      */
     public String getWorkflowDisplay() {
-        if (workflowType == null) return "Unknown";
-        return switch (workflowType.toUpperCase()) {
-            case "RECYCLING" -> "♻️ Recycling";
+        if (processingResult == null) return "Unknown";
+        return switch (processingResult.toUpperCase()) {
+            case "RECYCLE" -> "♻️ Recycling";
             case "REUSE" -> "🔄 Reuse";
             case "REPAIR" -> "🔧 Repair";
-            case "RECOVERY" -> "⚡ Recovery";
-            case "DISPOSAL" -> "🗑️ Disposal";
-            default -> workflowType;
+            case "REFURBISH" -> "🔧 Refurbish";
+            case "HAZARDOUS_DISPOSAL" -> "⚠️ Hazardous Disposal";
+            default -> processingResult;
         };
     }
 
@@ -100,9 +97,9 @@ public class ProcessItemClientRequest {
      * Check if workflow is valid
      */
     public boolean isValidWorkflow() {
-        if (workflowType == null) return false;
-        return switch (workflowType.toUpperCase()) {
-            case "RECYCLING", "REUSE", "REPAIR", "RECOVERY", "DISPOSAL" -> true;
+        if (processingResult == null) return false;
+        return switch (processingResult.toUpperCase()) {
+            case "RECYCLE", "REUSE", "REPAIR", "REFURBISH", "HAZARDOUS_DISPOSAL" -> true;
             default -> false;
         };
     }
@@ -110,10 +107,9 @@ public class ProcessItemClientRequest {
     @Override
     public String toString() {
         return "ProcessItemClientRequest{" +
-                "pickupId=" + pickupId +
-                ", workflowType='" + workflowType + '\'' +
+                "itemId=" + itemId +
+                ", processingResult='" + processingResult + '\'' +
                 ", centerId=" + centerId +
-                ", pointsAwarded=" + pointsAwarded +
                 ", isValid=" + isValid() +
                 '}';
     }

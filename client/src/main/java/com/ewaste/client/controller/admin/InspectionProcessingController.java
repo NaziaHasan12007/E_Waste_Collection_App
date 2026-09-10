@@ -76,19 +76,59 @@ public class InspectionProcessingController extends BaseController {
 
         deliveredPickupsTable.setItems(deliveredPickups);
         deliveredPickupsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null && newSel.getItemIds() != null && !newSel.getItemIds().isEmpty()) {
-                targetItemIdField.setText(String.valueOf(newSel.getItemIds().get(0)));
-            } else {
+            if (newSel == null) {
                 targetItemIdField.clear();
+                return;
+            }
+
+            setFirstItemId(newSel);
+            if (newSel.getItemIds() == null || newSel.getItemIds().isEmpty()) {
+                loadPickupItems(newSel);
             }
         });
     }
 
+    private void setFirstItemId(PickupClientResponse pickup) {
+        if (pickup.getItemIds() != null && !pickup.getItemIds().isEmpty()) {
+            targetItemIdField.setText(String.valueOf(pickup.getItemIds().get(0)));
+        } else {
+            targetItemIdField.clear();
+        }
+    }
+
+    private void loadPickupItems(PickupClientResponse selectedPickup) {
+        new Thread(() -> {
+            try {
+                PickupClientResponse detailedPickup =
+                        pickupApiClient.getPickupById(selectedPickup.getPickupId());
+                if (detailedPickup != null && detailedPickup.getItemIds() != null
+                        && !detailedPickup.getItemIds().isEmpty()) {
+                    Platform.runLater(() -> {
+                        if (deliveredPickupsTable.getSelectionModel().getSelectedItem() == selectedPickup) {
+                            selectedPickup.setItemIds(detailedPickup.getItemIds());
+                            setFirstItemId(selectedPickup);
+                        }
+                    });
+                }
+            } catch (RuntimeException e) {
+                Platform.runLater(() -> {
+                    if (deliveredPickupsTable.getSelectionModel().getSelectedItem() == selectedPickup
+                            && (selectedPickup.getItemIds() == null
+                            || selectedPickup.getItemIds().isEmpty())) {
+                        showWarning("Item Unavailable",
+                                "This pickup has no linked e-waste item. Create a new pickup or link an item before processing.",
+                                e.getMessage());
+                    }
+                });
+            }
+        }).start();
+    }
+
     private void setupForm() {
         workflowTypeComboBox.setItems(FXCollections.observableArrayList(
-                "RECYCLING", "REUSE", "REPAIR", "RECOVERY", "DISPOSAL"
+                "RECYCLE", "REFURBISH", "REPAIR", "HAZARDOUS_DISPOSAL"
         ));
-        workflowTypeComboBox.setValue("RECYCLING");
+        workflowTypeComboBox.setValue("RECYCLE");
 
         centerComboBox.setItems(facilityCenters);
         centerComboBox.setCellFactory(lv -> new ListCell<>() {
@@ -174,10 +214,10 @@ public class InspectionProcessingController extends BaseController {
         String workflowType = workflowTypeComboBox.getValue();
 
         ProcessItemClientRequest request = new ProcessItemClientRequest();
-        request.setPickupId(selectedPickup.getPickupId());
-        request.setWorkflowType(workflowType);
+        request.setItemId(itemId);
+        request.setProcessingResult(workflowType);
         request.setCenterId(selectedCenter.getId());
-        request.setPointsAwarded(100);
+        request.setInspectionNotes(notes);
 
         setLoading(true);
 

@@ -1,9 +1,12 @@
 package com.ewaste.client.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.time.LocalDateTime;
 
 public class RecyclingCenterClientResponse {
 
+    @JsonAlias("centerId")
     private Long id;
     private String name;
     private String address;

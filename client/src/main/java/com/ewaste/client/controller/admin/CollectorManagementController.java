@@ -26,8 +26,6 @@ public class CollectorManagementController extends BaseController {
     @FXML
     private TableColumn<CollectorClientResponse, String> nameColumn;
     @FXML
-    private TableColumn<CollectorClientResponse, String> emailColumn;
-    @FXML
     private TableColumn<CollectorClientResponse, String> vehicleColumn;
     @FXML
     private TableColumn<CollectorClientResponse, Boolean> availableColumn;
@@ -58,7 +56,6 @@ public class CollectorManagementController extends BaseController {
     private void setupTable() {
         idColumn.setCellValueFactory(c -> new SimpleLongProperty(c.getValue().getCollectorId()));
         nameColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFullName() != null ? c.getValue().getFullName() : "-"));
-        emailColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmail() != null ? c.getValue().getEmail() : "-"));
         vehicleColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getVehicleType() != null ? c.getValue().getVehicleType() : "-"));
         availableColumn.setCellValueFactory(c -> new SimpleBooleanProperty(Boolean.TRUE.equals(c.getValue().getIsAvailable())));
         workloadColumn.setCellValueFactory(c -> new SimpleDoubleProperty(

@@ -1,16 +1,21 @@
 package com.ewaste.client.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.time.LocalDateTime;
 
 public class EWasteItemClientResponse {
 
+    @JsonAlias("itemId")
     private Long id;
+    @JsonAlias("modelName")
     private String name;
     private Long categoryId;
     private String categoryName;
     private Double weightKg;
     private String description;
     private Integer quantity;
+    @JsonAlias("wasteCondition")
     private String condition;  // GOOD, FAIR, POOR
     private Long pickupId;
     private Double estimatedRecyclingValue;
