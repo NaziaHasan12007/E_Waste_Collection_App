@@ -13,6 +13,8 @@ public class EWasteItemClientResponse {
     private Long categoryId;
     private String categoryName;
     private Double weightKg;
+    @JsonAlias("isHazardous")
+    private Boolean hazardous;
     private String description;
     private Integer quantity;
     @JsonAlias("wasteCondition")
@@ -50,6 +52,7 @@ public class EWasteItemClientResponse {
     public Long getCategoryId() { return categoryId; }
     public String getCategoryName() { return categoryName; }
     public Double getWeightKg() { return weightKg; }
+    public Boolean getIsHazardous() { return hazardous; }
     public String getDescription() { return description; }
     public Integer getQuantity() { return quantity; }
     public String getCondition() { return condition; }
@@ -66,6 +69,7 @@ public class EWasteItemClientResponse {
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
     public void setWeightKg(Double weightKg) { this.weightKg = weightKg; }
+    public void setIsHazardous(Boolean hazardous) { this.hazardous = hazardous; }
     public void setDescription(String description) { this.description = description; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setCondition(String condition) { this.condition = condition; }

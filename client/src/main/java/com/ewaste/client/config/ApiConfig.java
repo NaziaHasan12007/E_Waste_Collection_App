@@ -101,6 +101,10 @@ public class ApiConfig {
         return baseUrl + "/reports/pickups";
     }
 
+    public String getReportsProcessingEndpoint() {
+        return baseUrl + "/reports/processing";
+    }
+
     public String getCollectorPerformanceEndpoint(Long collectorId) {
         return baseUrl + "/reports/collector/" + collectorId;
     }

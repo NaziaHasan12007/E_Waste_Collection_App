@@ -2,10 +2,12 @@ package com.ewaste.client.controller.admin;
 
 import com.ewaste.client.api.PickupApiClient;
 import com.ewaste.client.api.ProcessingApiClient;
+import com.ewaste.client.api.EWasteApiClient;
 import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.controller.BaseController;
 import com.ewaste.client.dto.request.ProcessItemClientRequest;
 import com.ewaste.client.dto.response.PickupClientResponse;
+import com.ewaste.client.dto.response.EWasteItemClientResponse;
 import com.ewaste.client.dto.response.ProcessingOutcomeClientResponse;
 import com.ewaste.client.dto.response.RecyclingCenterClientResponse;
 import com.ewaste.client.navigation.AppScreen;
@@ -17,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InspectionProcessingController extends BaseController {
@@ -47,6 +50,7 @@ public class InspectionProcessingController extends BaseController {
 
     private PickupApiClient pickupApiClient;
     private ProcessingApiClient processingApiClient;
+    private EWasteApiClient eWasteApiClient;
     private final ObservableList<PickupClientResponse> deliveredPickups = FXCollections.observableArrayList();
     private final ObservableList<RecyclingCenterClientResponse> facilityCenters = FXCollections.observableArrayList();
 
@@ -54,6 +58,7 @@ public class InspectionProcessingController extends BaseController {
     protected void onInitialize() {
         pickupApiClient = ClientContext.getInstance().getPickupApiClient();
         processingApiClient = ClientContext.getInstance().getProcessingApiClient();
+        eWasteApiClient = ClientContext.getInstance().getEWasteApiClient();
 
         setupTable();
         setupForm();
@@ -90,10 +95,50 @@ public class InspectionProcessingController extends BaseController {
 
     private void setFirstItemId(PickupClientResponse pickup) {
         if (pickup.getItemIds() != null && !pickup.getItemIds().isEmpty()) {
-            targetItemIdField.setText(String.valueOf(pickup.getItemIds().get(0)));
+            long itemId = pickup.getItemIds().get(0);
+            targetItemIdField.setText(String.valueOf(itemId));
+            loadWorkflowOptions(itemId);
         } else {
             targetItemIdField.clear();
+            setAllWorkflowOptions();
         }
+    }
+
+    private void setAllWorkflowOptions() {
+        workflowTypeComboBox.setItems(FXCollections.observableArrayList(
+                "RECYCLE", "REFURBISH", "REPAIR", "HAZARDOUS_DISPOSAL"));
+        workflowTypeComboBox.setValue("RECYCLE");
+    }
+
+    private void loadWorkflowOptions(long itemId) {
+        new Thread(() -> {
+            try {
+                EWasteItemClientResponse item = eWasteApiClient.getItem(itemId);
+                List<String> options = new ArrayList<>();
+                if (item != null && Boolean.TRUE.equals(item.getIsHazardous())) {
+                    options.add("HAZARDOUS_DISPOSAL");
+                } else {
+                    options.add("RECYCLE");
+                    String condition = item != null && item.getCondition() != null
+                            ? item.getCondition().toUpperCase() : "";
+                    if ("WORKING".equals(condition) || "MINOR_DAMAGE".equals(condition)) {
+                        options.add("REFURBISH");
+                    }
+                    if ("MINOR_DAMAGE".equals(condition) || "MAJOR_DAMAGE".equals(condition)) {
+                        options.add("REPAIR");
+                    }
+                }
+
+                Platform.runLater(() -> {
+                    workflowTypeComboBox.setItems(FXCollections.observableArrayList(options));
+                    if (!options.isEmpty()) {
+                        workflowTypeComboBox.setValue(options.get(0));
+                    }
+                });
+            } catch (RuntimeException ignored) {
+                Platform.runLater(this::setAllWorkflowOptions);
+            }
+        }).start();
     }
 
     private void loadPickupItems(PickupClientResponse selectedPickup) {

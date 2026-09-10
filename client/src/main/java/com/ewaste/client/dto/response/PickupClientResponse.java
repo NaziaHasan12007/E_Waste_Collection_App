@@ -145,6 +145,13 @@ public class PickupClientResponse {
     }
 
     /**
+     * Check if the pickup has reached facility processing or completion.
+     */
+    public boolean isProcessed() {
+        return "PROCESSING".equalsIgnoreCase(currentState) || isCompleted();
+    }
+
+    /**
      * Check if the pickup is cancelled
      */
     public boolean isCancelled() {

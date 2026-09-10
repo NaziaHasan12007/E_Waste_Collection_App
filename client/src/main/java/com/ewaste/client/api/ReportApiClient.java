@@ -27,4 +27,9 @@ public class ReportApiClient extends ApiClient {
         String endpoint = ApiConfig.getInstance().getReportsPickupsEndpoint();
         return get(endpoint, AnalyticsClientResponse.class);
     }
+
+    public AnalyticsClientResponse getProcessingReport() {
+        String endpoint = ApiConfig.getInstance().getReportsProcessingEndpoint();
+        return get(endpoint, AnalyticsClientResponse.class);
+    }
 }

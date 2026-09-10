@@ -1,9 +1,11 @@
 package com.ewaste.client.controller.admin;
 
 import com.ewaste.client.api.ReportApiClient;
+import com.ewaste.client.api.PickupApiClient;
 import com.ewaste.client.config.ClientContext;
 import com.ewaste.client.controller.BaseController;
 import com.ewaste.client.dto.response.AnalyticsClientResponse;
+import com.ewaste.client.dto.response.PickupClientResponse;
 import com.ewaste.client.navigation.AppScreen;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -17,6 +19,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 
 import java.util.Map;
+import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 public class AnalyticsController extends BaseController {
 
@@ -42,10 +47,12 @@ public class AnalyticsController extends BaseController {
     private ProgressIndicator loadingIndicator;
 
     private ReportApiClient reportApiClient;
+    private PickupApiClient pickupApiClient;
 
     @Override
     protected void onInitialize() {
         reportApiClient = ClientContext.getInstance().getReportApiClient();
+        pickupApiClient = ClientContext.getInstance().getPickupApiClient();
         loadAnalyticsData();
     }
 
@@ -55,11 +62,13 @@ public class AnalyticsController extends BaseController {
         new Thread(() -> {
             try {
                 AnalyticsClientResponse data = reportApiClient.getReportsSummary();
+                AnalyticsClientResponse processing = reportApiClient.getProcessingReport();
+                List<PickupClientResponse> pickups = pickupApiClient.getAllPickups(null);
 
                 Platform.runLater(() -> {
                     setLoading(false);
                     if (data != null) {
-                        renderMetrics(data);
+                        renderMetrics(data, processing, pickups);
                     }
                 });
 
@@ -72,12 +81,15 @@ public class AnalyticsController extends BaseController {
         }).start();
     }
 
-    private void renderMetrics(AnalyticsClientResponse data) {
+    private void renderMetrics(AnalyticsClientResponse data,
+                               AnalyticsClientResponse processing,
+                               List<PickupClientResponse> pickups) {
         totalVolumeLabel.setText(String.format("%.1f kg",
                 data.getTotalWeightRecycled() != null ? data.getTotalWeightRecycled() : 0.0));
 
         hazardousRatioLabel.setText(String.format("%.1f %%",
-                data.getHazardousWasteRatio() != null ? data.getHazardousWasteRatio() : 0.0));
+                data.getHazardousWasteRatio() != null
+                        ? data.getHazardousWasteRatio() * 100.0 : 0.0));
 
         totalPointsIssuedLabel.setText(String.valueOf(
                 data.getTotalPointsEarned() != null ? data.getTotalPointsEarned() : 0));
@@ -88,22 +100,28 @@ public class AnalyticsController extends BaseController {
         }
         activeFleetUtilizationLabel.setText(String.format("%.1f %%", utilization));
 
-        // Populate PieChart
+        // Show the actual distribution of facility processing outcomes.
         ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
-        pieData.add(new PieChart.Data("Laptops", 30));
-        pieData.add(new PieChart.Data("Batteries", 25));
-        pieData.add(new PieChart.Data("Displays", 20));
-        pieData.add(new PieChart.Data("Circuit Boards", 15));
-        pieData.add(new PieChart.Data("Other", 10));
+        if (processing != null && processing.getRecordsByWorkflowType() != null) {
+            processing.getRecordsByWorkflowType().forEach((workflow, count) ->
+                    pieData.add(new PieChart.Data(workflow, count != null ? count : 0)));
+        }
         categoryDistributionChart.setData(pieData);
 
-        // Populate BarChart
+        // Show the actual pickup lifecycle distribution.
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Tonnage Processed (kg)");
-        series.getData().add(new XYChart.Data<>("Center A", 450));
-        series.getData().add(new XYChart.Data<>("Center B", 320));
-        series.getData().add(new XYChart.Data<>("Center C", 280));
-        series.getData().add(new XYChart.Data<>("Center D", 190));
+        series.setName("Pickup Count");
+        Map<String, Long> statusCounts = new LinkedHashMap<>();
+        if (pickups != null) {
+            statusCounts = pickups.stream()
+                    .filter(p -> p.getCurrentState() != null)
+                    .collect(Collectors.groupingBy(
+                            PickupClientResponse::getCurrentState,
+                            LinkedHashMap::new,
+                            Collectors.counting()));
+        }
+        statusCounts.forEach((status, count) ->
+                series.getData().add(new XYChart.Data<>(status, count)));
         facilityThroughputChart.getData().clear();
         facilityThroughputChart.getData().add(series);
     }

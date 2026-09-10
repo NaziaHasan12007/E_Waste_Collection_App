@@ -78,9 +78,10 @@ public class CustomerDashboardController extends BaseController {
                         .filter(PickupClientResponse::isActive)
                         .count();
 
-                // Calculate total recycled weight from completed pickups
+                // Processed pickups already have a facility outcome and should count
+                // even while their lifecycle is waiting to be marked COMPLETED.
                 double totalWeight = pickups.stream()
-                        .filter(PickupClientResponse::isCompleted)
+                        .filter(PickupClientResponse::isProcessed)
                         .mapToDouble(PickupClientResponse::getTotalWeight)
                         .sum();
 
