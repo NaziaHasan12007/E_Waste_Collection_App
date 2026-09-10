@@ -5,9 +5,7 @@ import com.ewaste.server.api.dto.response.PickupResponseDto;
 import com.ewaste.server.api.mapper.PickupMapper;
 import com.ewaste.server.application.service.PickupService;
 import com.ewaste.server.common.validation.PickupValidator;
-import com.ewaste.server.domain.model.collector.Collector;
 import com.ewaste.server.domain.model.pickup.PickupRequest;
-import com.ewaste.server.domain.model.pickup.PickupStatus;
 import com.ewaste.server.domain.pattern.observer.PickupEvent;
 import com.ewaste.server.domain.pattern.observer.PickupEventPublisher;
 import com.ewaste.server.domain.pattern.strategy.assignment.AssignmentStrategy;
@@ -19,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -62,7 +59,7 @@ class PickupFacadeTest {
     }
 
     @Test
-    @DisplayName("Should validate, prioritize, auto-assign available collector, and dispatch event")
+    @DisplayName("Should validate, prioritize, persist, and queue new pickup in REQUESTED state")
     void testCreatePickupWithCollectorAssigned() {
         CreatePickupRequestDto requestDto = new CreatePickupRequestDto();
         requestDto.setUserId(1L);
@@ -71,29 +68,24 @@ class PickupFacadeTest {
         PickupRequest entity = new PickupRequest();
         entity.setUserId(1L);
 
-        Collector collector = new Collector();
-        collector.setCollectorId(42L);
-        collector.setCurrentWorkloadKg(10.0);
-
         PickupResponseDto responseDto = new PickupResponseDto();
         responseDto.setPickupId(100L);
-        responseDto.setStatus("ASSIGNED");
+        responseDto.setStatus("REQUESTED");
 
         when(pickupMapper.toEntity(requestDto)).thenReturn(entity);
         when(priorityStrategy.calculatePriority(entity)).thenReturn(75.5);
-        when(collectorRepository.findByAvailability(true)).thenReturn(List.of(collector));
-        when(assignmentStrategy.selectCollector(eq(entity), anyList())).thenReturn(Optional.of(collector));
         when(pickupService.save(entity)).thenReturn(entity);
         when(pickupMapper.toResponseDto(entity)).thenReturn(responseDto);
 
         PickupResponseDto result = pickupFacade.createPickup(requestDto);
 
         assertNotNull(result);
-        assertEquals("ASSIGNED", result.getStatus());
+        assertEquals("REQUESTED", result.getStatus());
 
         verify(pickupValidator).validateCreateRequest(requestDto);
         verify(priorityStrategy).calculatePriority(entity);
-        verify(collectorRepository).update(collector);
+        verify(collectorRepository, never()).update(any());
+        verify(assignmentStrategy, never()).selectCollector(any(), anyList());
         verify(pickupService).save(entity);
         verify(eventPublisher).publish(any(PickupEvent.class));
     }
@@ -112,8 +104,6 @@ class PickupFacadeTest {
 
         when(pickupMapper.toEntity(requestDto)).thenReturn(entity);
         when(priorityStrategy.calculatePriority(entity)).thenReturn(30.0);
-        when(collectorRepository.findByAvailability(true)).thenReturn(List.of());
-        when(assignmentStrategy.selectCollector(eq(entity), anyList())).thenReturn(Optional.empty());
         when(pickupService.save(entity)).thenReturn(entity);
         when(pickupMapper.toResponseDto(entity)).thenReturn(responseDto);
 
@@ -122,6 +112,7 @@ class PickupFacadeTest {
         assertNotNull(result);
         assertEquals("REQUESTED", result.getStatus());
         verify(collectorRepository, never()).update(any());
+        verify(assignmentStrategy, never()).selectCollector(any(), anyList());
         verify(pickupService).save(entity);
         verify(eventPublisher).publish(any(PickupEvent.class));
     }

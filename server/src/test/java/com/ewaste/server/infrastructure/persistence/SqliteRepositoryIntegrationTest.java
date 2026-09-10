@@ -20,6 +20,8 @@ import org.sqlite.SQLiteDataSource;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -40,8 +42,9 @@ class SqliteRepositoryIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         SQLiteDataSource ds = new SQLiteDataSource();
-        // In-memory isolated database instance per test run
-        ds.setUrl("jdbc:sqlite::memory:");
+        // File-backed temp DB so all repository connections share the same schema/data.
+        Path dbFile = Files.createTempFile("ewaste-repo-it-", ".db");
+        ds.setUrl("jdbc:sqlite:" + dbFile.toAbsolutePath());
         this.dataSource = ds;
 
         try (Connection conn = dataSource.getConnection();
@@ -50,11 +53,12 @@ class SqliteRepositoryIntegrationTest {
 
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS users (
-                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
                     full_name TEXT NOT NULL,
-                    role TEXT NOT NULL
+                    role TEXT NOT NULL,
+                    created_at TEXT
                 );
             """);
 
@@ -65,7 +69,9 @@ class SqliteRepositoryIntegrationTest {
                     vehicle_type TEXT NOT NULL,
                     max_capacity_kg REAL NOT NULL,
                     current_workload_kg REAL DEFAULT 0.0,
-                    is_available INTEGER DEFAULT 1
+                    is_available INTEGER DEFAULT 1,
+                    created_at TEXT,
+                    updated_at TEXT
                 );
             """);
 
@@ -74,7 +80,11 @@ class SqliteRepositoryIntegrationTest {
                     center_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     center_name TEXT NOT NULL,
                     address TEXT NOT NULL,
-                    processing_capacity_kg REAL NOT NULL
+                    processing_capacity_kg REAL NOT NULL,
+                    current_load_kg REAL DEFAULT 0.0,
+                    is_active INTEGER DEFAULT 1,
+                    created_at TEXT,
+                    updated_at TEXT
                 );
             """);
 
@@ -83,9 +93,16 @@ class SqliteRepositoryIntegrationTest {
                     record_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     pickup_id INTEGER,
                     center_id INTEGER NOT NULL,
+                    item_id INTEGER,
                     workflow_type TEXT NOT NULL,
                     points_awarded INTEGER DEFAULT 0,
-                    processed_at TEXT NOT NULL
+                    processing_status TEXT,
+                    notes TEXT,
+                    actual_weight_kg REAL,
+                    carbon_credits_earned REAL,
+                    processed_at TEXT NOT NULL,
+                    created_at TEXT,
+                    updated_at TEXT
                 );
             """);
 
@@ -96,8 +113,11 @@ class SqliteRepositoryIntegrationTest {
                     collector_id INTEGER,
                     current_state TEXT NOT NULL,
                     priority_score REAL DEFAULT 0.0,
+                    address TEXT,
                     scheduled_date TEXT,
-                    created_at TEXT NOT NULL
+                    preferred_time TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT
                 );
             """);
 
