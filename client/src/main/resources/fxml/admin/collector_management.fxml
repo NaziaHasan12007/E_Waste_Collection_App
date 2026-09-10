@@ -44,13 +44,10 @@
                 <columns>
                     <TableColumn fx:id="idColumn" text="Collector ID" prefWidth="95.0"/>
                     <TableColumn fx:id="nameColumn" text="Name" prefWidth="150.0"/>
-                    <TableColumn fx:id="phoneColumn" text="Contact" prefWidth="120.0"/>
-                    <TableColumn fx:id="areaColumn" text="Operational Zone" prefWidth="140.0"/>
                     <TableColumn fx:id="vehicleColumn" text="Vehicle Type" prefWidth="110.0"/>
-                    <TableColumn fx:id="hazardousColumn" text="Hazmat Certified" prefWidth="120.0"/>
                     <TableColumn fx:id="availableColumn" text="Active / Ready" prefWidth="110.0"/>
-                    <TableColumn fx:id="workloadColumn" text="Workload (kg)" prefWidth="105.0"/>
-                    <TableColumn fx:id="maxCapacityColumn" text="Max Payload (kg)" prefWidth="125.0"/>
+                    <TableColumn fx:id="workloadColumn" text="Current Assigned (kg)" prefWidth="145.0"/>
+                    <TableColumn fx:id="maxCapacityColumn" text="Total Capacity (kg)" prefWidth="135.0"/>
                 </columns>
                 <placeholder>
                     <Label text="No registered collectors found in database records." styleClass="subtext"/>

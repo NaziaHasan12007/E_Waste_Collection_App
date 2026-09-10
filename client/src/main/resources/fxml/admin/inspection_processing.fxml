@@ -70,10 +70,10 @@
                 <TextField fx:id="targetItemIdField" promptText="e.g. 101"/>
 
                 <Label text="Designated Recycling Center:" styleClass="heading-2"/>
-                <ComboBox fx:id="centerComboBox" maxWidth="Infinity" promptText="Select Facility Center..."/>
+                <ComboBox fx:id="centerComboBox" styleClass="admin-dropdown" maxWidth="Infinity" promptText="Select Facility Center..."/>
 
                 <Label text="Processing Outcome Template:" styleClass="heading-2"/>
-                <ComboBox fx:id="workflowTypeComboBox" maxWidth="Infinity"/>
+                <ComboBox fx:id="workflowTypeComboBox" styleClass="admin-dropdown" maxWidth="Infinity"/>
 
                 <Label text="Technical Inspection Findings &amp; Safety Notes:" styleClass="heading-2"/>
                 <TextArea fx:id="inspectionNotesArea" prefRowCount="4" promptText="Condition notes, serial verification, heavy metal or battery safety observations..."/>

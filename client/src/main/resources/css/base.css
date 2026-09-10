@@ -19,19 +19,22 @@
     -fx-font-size: 24px;
     -fx-font-weight: 800;
     -fx-text-fill: #ffffff;
+    -fx-fill: #ffffff;
     -fx-effect: dropshadow(gaussian, rgba(16, 185, 129, 0.25), 10, 0.2, 0, 0);
 }
 
 .heading-2 {
     -fx-font-size: 15px;
     -fx-font-weight: 700;
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #e2e8f0;
+    -fx-fill: #e2e8f0;
     -fx-letter-spacing: 0.5px;
 }
 
 .subtext {
     -fx-font-size: 12px;
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #cbd5e1;
+    -fx-fill: #cbd5e1;
 }
 
 .badge-tag {
@@ -152,7 +155,7 @@
 .text-field {
     -fx-background-color: rgba(15, 23, 42, 0.85);
     -fx-text-fill: #f8fafc;
-    -fx-prompt-text-fill: #64748b;
+    -fx-prompt-text-fill: #cbd5e1;
     -fx-background-radius: 8px;
     -fx-border-color: rgba(255, 255, 255, 0.12);
     -fx-border-radius: 8px;
@@ -167,7 +170,7 @@
 .text-area {
     -fx-background-color: rgba(15, 23, 42, 0.85);
     -fx-text-fill: #f8fafc;
-    -fx-prompt-text-fill: #64748b;
+    -fx-prompt-text-fill: #cbd5e1;
     -fx-background-radius: 8px;
     -fx-border-color: rgba(255, 255, 255, 0.12);
     -fx-border-radius: 8px;
@@ -197,12 +200,13 @@
 
 .combo-box .list-cell {
     -fx-background-color: rgba(15, 23, 42, 0.95);
-    -fx-text-fill: #f8fafc;
+    -fx-text-fill: #000000;
     -fx-padding: 8px 14px;
 }
 
 .combo-box .list-cell:hover {
     -fx-background-color: rgba(37, 99, 235, 0.5);
+    -fx-text-fill: #000000;
 }
 
 .combo-box .list-view {
@@ -211,8 +215,17 @@
     -fx-border-radius: 8px;
 }
 
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #000000;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-text-fill: #000000;
+}
+
 .check-box {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #e2e8f0;
 }
 
 .check-box .box {
@@ -249,9 +262,13 @@
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #94a3b8;
+    -fx-text-fill: #e2e8f0;
     -fx-font-weight: 700;
     -fx-font-size: 12px;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #ffffff;
 }
 
 .table-view .table-row-cell {
@@ -275,6 +292,10 @@
 .table-view .table-row-cell:selected .label {
     -fx-text-fill: #ffffff;
     -fx-font-weight: 600;
+}
+
+.list-view .list-cell {
+    -fx-text-fill: #ffffff;
 }
 
 /* ==========================================================================

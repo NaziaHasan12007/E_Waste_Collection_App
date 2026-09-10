@@ -44,10 +44,10 @@
             <!-- Filter Controls Bar -->
             <HBox spacing="15.0" alignment="CENTER_LEFT" styleClass="card">
                 <Label text="Filter State:" styleClass="heading-2"/>
-                <ComboBox fx:id="stateFilterCombo" prefWidth="180.0"/>
+                <ComboBox fx:id="stateFilterCombo" styleClass="admin-dropdown" prefWidth="180.0"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label text="Manual Dispatch Target:" styleClass="heading-2"/>
-                <ComboBox fx:id="collectorAssignmentCombo" prefWidth="300.0" promptText="Select Eligible Collector..."/>
+                <ComboBox fx:id="collectorAssignmentCombo" styleClass="admin-dropdown" prefWidth="300.0" promptText="Select Eligible Collector..."/>
                 <Button fx:id="assignButton" text="Assign Collector" onAction="#handleAssignCollector"
                         styleClass="button-success" disable="true"/>
                 <Button fx:id="cancelButton" text="Cancel Pickup" onAction="#handleCancelPickup"

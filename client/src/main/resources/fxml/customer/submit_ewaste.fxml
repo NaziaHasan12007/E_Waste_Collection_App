@@ -44,32 +44,32 @@
 
                     <!-- Item Name -->
                     <VBox spacing="6">
-                        <Label text="Item Name" styleClass="subtext" textFill="#94a3b8"/>
+                        <Label text="Item Name" styleClass="subtext" textFill="#e2e8f0"/>
                         <TextField fx:id="txtItemName" promptText="e.g., Laptop, Mobile Phone" styleClass="text-field"/>
                     </VBox>
 
                     <!-- Category -->
                     <VBox spacing="6">
-                        <Label text="Category" styleClass="subtext" textFill="#94a3b8"/>
-                        <ComboBox fx:id="cmbCategory" styleClass="text-field" promptText="Select category"/>
+                        <Label text="Category" styleClass="subtext" textFill="#e2e8f0"/>
+                        <ComboBox fx:id="cmbCategory" styleClass="text-field category-dropdown pickup-dropdown" promptText="Select category"/>
                     </VBox>
 
                     <!-- Weight & Quantity -->
                     <HBox spacing="20">
                         <VBox spacing="6" HBox.hgrow="ALWAYS">
-                            <Label text="Weight (kg)" styleClass="subtext" textFill="#94a3b8"/>
+                            <Label text="Weight (kg)" styleClass="subtext" textFill="#e2e8f0"/>
                             <TextField fx:id="txtWeight" promptText="e.g., 2.5" styleClass="text-field"/>
                         </VBox>
                         <VBox spacing="6" HBox.hgrow="ALWAYS">
-                            <Label text="Quantity" styleClass="subtext" textFill="#94a3b8"/>
+                            <Label text="Quantity" styleClass="subtext" textFill="#e2e8f0"/>
                             <TextField fx:id="txtQuantity" promptText="e.g., 1" styleClass="text-field"/>
                         </VBox>
                     </HBox>
 
                     <!-- Condition -->
                     <VBox spacing="6">
-                        <Label text="Condition" styleClass="subtext" textFill="#94a3b8"/>
-                        <ComboBox fx:id="cmbCondition" styleClass="text-field" promptText="Select condition">
+                        <Label text="Condition" styleClass="subtext" textFill="#e2e8f0"/>
+                        <ComboBox fx:id="cmbCondition" styleClass="text-field pickup-dropdown" promptText="Select condition">
                             <items>
                                 <FXCollections fx:factory="observableArrayList">
                                     <String fx:value="WORKING"/>
@@ -84,7 +84,7 @@
 
                     <!-- Description -->
                     <VBox spacing="6">
-                        <Label text="Description (Optional)" styleClass="subtext" textFill="#94a3b8"/>
+                        <Label text="Description (Optional)" styleClass="subtext" textFill="#e2e8f0"/>
                         <TextArea fx:id="txtDescription" promptText="Any additional details about the item..."
                                   styleClass="text-field" prefHeight="80" wrapText="true"/>
                     </VBox>
@@ -107,7 +107,7 @@
                         </VBox>
                         <VBox spacing="6" HBox.hgrow="ALWAYS">
                             <Label text="Preferred Time" styleClass="subtext"/>
-                            <ComboBox fx:id="cmbPreferredTime" styleClass="text-field"
+                            <ComboBox fx:id="cmbPreferredTime" styleClass="text-field pickup-dropdown"
                                       promptText="Select a time"/>
                         </VBox>
                     </HBox>

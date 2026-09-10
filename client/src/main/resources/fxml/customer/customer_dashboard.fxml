@@ -64,6 +64,8 @@
                         onAction="#handleViewHistory" maxWidth="Infinity"/>
                 <Button text="🏆 View Rewards" styleClass="button-secondary" prefHeight="40"
                         onAction="#handleViewRewards" maxWidth="Infinity"/>
+                <Button text="🎁 Redeem Points" styleClass="button-success" prefHeight="40"
+                        onAction="#handleRedeemPoints" maxWidth="Infinity"/>
                 <Button text="🔄 Refresh" styleClass="button-secondary" prefHeight="40"
                         onAction="#handleRefresh" maxWidth="Infinity"/>
 

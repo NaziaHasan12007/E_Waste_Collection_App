@@ -21,6 +21,7 @@
                 <Button text="← Back" styleClass="button-secondary" onAction="#handleBack"/>
                 <Text text="🏆 Rewards &amp; Points" styleClass="heading-1"/>
                 <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnRedeem" text="Redeem Points" styleClass="button-success" onAction="#handleRedeem"/>
                 <Button text="🔄 Refresh" styleClass="button-secondary" onAction="#handleRefresh"/>
             </HBox>
 

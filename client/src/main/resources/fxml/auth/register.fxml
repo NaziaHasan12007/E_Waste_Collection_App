@@ -24,40 +24,40 @@
 
     <!-- Full Name -->
     <VBox spacing="4" maxWidth="400">
-        <Label text="Full Name" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Full Name" styleClass="subtext" textFill="#e2e8f0"/>
         <TextField fx:id="txtFullName" promptText="Enter your full name" styleClass="text-field" prefHeight="40"/>
     </VBox>
 
     <!-- Email -->
     <VBox spacing="4" maxWidth="400">
-        <Label text="Email Address" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Email Address" styleClass="subtext" textFill="#e2e8f0"/>
         <TextField fx:id="txtEmail" promptText="Enter your email" styleClass="text-field" prefHeight="40"/>
     </VBox>
 
     <!-- Password -->
     <VBox spacing="4" maxWidth="400">
-        <Label text="Password" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Password" styleClass="subtext" textFill="#e2e8f0"/>
         <PasswordField fx:id="txtPassword" promptText="Create a password (min 6 characters)" styleClass="text-field" prefHeight="40"/>
     </VBox>
 
     <!-- Confirm Password -->
     <VBox spacing="4" maxWidth="400">
-        <Label text="Confirm Password" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Confirm Password" styleClass="subtext" textFill="#e2e8f0"/>
         <PasswordField fx:id="txtConfirmPassword" promptText="Confirm your password" styleClass="text-field" prefHeight="40"/>
     </VBox>
 
     <!-- Role Selection -->
     <VBox spacing="4" maxWidth="400">
-        <Label text="Register as" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Register as" styleClass="subtext" textFill="#e2e8f0"/>
         <ComboBox fx:id="cmbRole" styleClass="text-field" prefHeight="40" promptText="Select role"/>
     </VBox>
 
     <!-- Collector Fields (Hidden by default) -->
     <VBox fx:id="collectorFields" spacing="4" maxWidth="400" visible="false" managed="false">
-        <Label text="Vehicle Type" styleClass="subtext" textFill="#94a3b8"/>
+        <Label text="Vehicle Type" styleClass="subtext" textFill="#e2e8f0"/>
         <TextField fx:id="txtVehicleType" promptText="e.g., Van, Truck" styleClass="text-field" prefHeight="40"/>
 
-        <Label text="Max Capacity (kg)" styleClass="subtext" textFill="#94a3b8">
+        <Label text="Max Capacity (kg)" styleClass="subtext" textFill="#e2e8f0">
             <VBox.margin>
                 <Insets top="4"/>
             </VBox.margin>
