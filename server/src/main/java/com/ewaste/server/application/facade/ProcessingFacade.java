@@ -9,10 +9,12 @@ import com.ewaste.server.common.exception.BusinessRuleException;
 import com.ewaste.server.common.exception.ResourceNotFoundException;
 import com.ewaste.server.domain.model.ewaste.EWasteItem;
 import com.ewaste.server.domain.model.processing.ProcessingRecord;
+import com.ewaste.server.domain.model.pickup.PickupStatus;
 import com.ewaste.server.domain.model.processing.ProcessingResult;
 import com.ewaste.server.domain.model.processing.RecyclingCenter;
 import com.ewaste.server.domain.pattern.template.*;
 import com.ewaste.server.domain.repository.EWasteItemRepository;
+import com.ewaste.server.domain.repository.PickupRepository;
 import com.ewaste.server.domain.repository.RecyclingCenterRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,21 +35,32 @@ public class ProcessingFacade {
     private final RewardService rewardService;
     private final RecyclingCenterRepository centerRepository;
     private final EWasteItemRepository itemRepository;
+    private final PickupRepository pickupRepository;
     private final ProcessingRecordMapper mapper;
 
     public ProcessingFacade(ProcessingService processingService,
                             RewardService rewardService,
                             RecyclingCenterRepository centerRepository,
                             EWasteItemRepository itemRepository,
+                            PickupRepository pickupRepository,
                             ProcessingRecordMapper mapper) {
         this.processingService = processingService;
         this.rewardService = rewardService;
         this.centerRepository = centerRepository;
         this.itemRepository = itemRepository;
+        this.pickupRepository = pickupRepository;
         this.mapper = mapper;
     }
 
     public ProcessingOutcomeResponse processItem(InspectionOutcomeRequest request) {
+        if (request == null || request.getItemId() == null || request.getItemId() <= 0
+                || request.getCenterId() == null || request.getCenterId() <= 0
+                || request.getProcessingResult() == null
+                || request.getProcessingResult().isBlank()) {
+            throw new BusinessRuleException(
+                    "Item ID, facility center ID, and processing result are required");
+        }
+
         log.info("Processing inspection outcome for item {}", request.getItemId());
 
         RecyclingCenter center = centerRepository.findById(request.getCenterId())
@@ -65,10 +78,33 @@ public class ProcessingFacade {
 
         // 1. Resolve workflow via Template Method Pattern
         AbstractProcessingTemplate workflow = resolveWorkflow(result);
-        AbstractProcessingTemplate.ProcessingRecord templateRecord = workflow.executeProcessing(item);
+        try {
+            workflow.executeProcessing(item);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new BusinessRuleException(
+                    "The " + result.name() + " workflow cannot process item "
+                            + item.getItemId() + ": " + e.getMessage());
+        }
+        var pickup = pickupRepository.findByItemId(item.getItemId())
+                .orElseThrow(() -> new BusinessRuleException(
+                        "Cannot award points because item " + item.getItemId()
+                                + " is not associated with a pickup"));
+
+        if (pickup.getStatus() != PickupStatus.DELIVERED) {
+            throw new BusinessRuleException(
+                    "Pickup " + pickup.getPickupId()
+                            + " is already processed or is not ready for facility processing");
+        }
+
+        if (!processingService.findByPickupId(pickup.getPickupId()).isEmpty()) {
+            throw new BusinessRuleException(
+                    "Pickup " + pickup.getPickupId()
+                            + " has already been processed and cannot receive duplicate rewards");
+        }
 
         // 2. Persist outcome
         ProcessingRecord record = new ProcessingRecord();
+        record.setPickupId(pickup.getPickupId());
         record.setItemId(item.getItemId());
         record.setCenterId(center.getCenterId());
         record.setInspectionNotes(request.getInspectionNotes());
@@ -80,6 +116,17 @@ public class ProcessingFacade {
         record.setPointsAwarded(points);
 
         ProcessingRecord saved = processingService.saveRecord(record);
+
+        rewardService.awardPoints(
+                pickup.getUserId(),
+                pickup.getPickupId(),
+                points,
+                "Processing outcome: " + result.name()
+        );
+
+        pickup.process();
+        pickup.complete();
+        pickupRepository.update(pickup);
 
         // 4. Update recycling center capacity load
         center.setCurrentUtilizationKg(center.getCurrentUtilizationKg() + item.getWeightKg());

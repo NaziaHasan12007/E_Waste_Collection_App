@@ -17,13 +17,34 @@ public class RewardService {
     }
 
     public Reward awardPoints(Long userId, Long pickupId, int points, String calculationBasis) {
+        int currentBalance = rewardRepository.getCurrentBalanceByCustomerId(userId);
         Reward reward = new Reward();
         reward.setUserId(userId);
         reward.setPickupId(pickupId);
         reward.setPoints(points);
+        reward.setBalance(currentBalance + points);
         reward.setCalculationBasis(calculationBasis);
         reward.setCreatedAt(LocalDateTime.now());
         return rewardRepository.save(reward);
+    }
+
+    public Reward redeemPoints(Long userId, int points) {
+        if (points <= 0) {
+            throw new IllegalArgumentException("Redeemed points must be greater than zero");
+        }
+
+        int currentBalance = rewardRepository.getCurrentBalanceByCustomerId(userId);
+        if (points > currentBalance) {
+            throw new IllegalArgumentException("Insufficient reward points");
+        }
+
+        Reward redemption = new Reward();
+        redemption.setUserId(userId);
+        redemption.setPoints(-points);
+        redemption.setBalance(currentBalance - points);
+        redemption.setCalculationBasis("Points redeemed");
+        redemption.setCreatedAt(LocalDateTime.now());
+        return rewardRepository.save(redemption);
     }
 
     public int getTotalPointsForUser(Long userId) {

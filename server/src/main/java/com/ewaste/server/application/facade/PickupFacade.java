@@ -90,6 +90,7 @@ public class PickupFacade {
     public void advanceState(Long pickupId, String action, Long paramId) {
         PickupRequest pickup = pickupService.findById(pickupId);
         PickupStatus oldStatus = pickup.getStatus();
+        Long oldCollectorId = pickup.getCollectorId();
 
         switch (action.toUpperCase()) {
             case "ASSIGN" -> {
@@ -112,7 +113,32 @@ public class PickupFacade {
             default -> throw new BusinessRuleException("Unknown state transition action: " + action);
         }
 
+        updateCollectorWorkload(pickup, action.toUpperCase(), oldCollectorId);
         pickupService.update(pickup);
         eventPublisher.publish(new PickupEvent(pickup, oldStatus, "Action applied: " + action));
+    }
+
+    private void updateCollectorWorkload(PickupRequest pickup, String action, Long oldCollectorId) {
+        if ("ASSIGN".equals(action) && pickup.getCollectorId() != null
+                && !pickup.getCollectorId().equals(oldCollectorId)) {
+            if (oldCollectorId != null) {
+                adjustCollectorWorkload(oldCollectorId, -pickup.getTotalWeight());
+            }
+            adjustCollectorWorkload(pickup.getCollectorId(), pickup.getTotalWeight());
+        } else if (("DELIVER".equals(action) || "CANCEL".equals(action)
+                || "COMPLETE".equals(action)) && oldCollectorId != null) {
+            adjustCollectorWorkload(oldCollectorId, -pickup.getTotalWeight());
+        }
+    }
+
+    private void adjustCollectorWorkload(Long collectorId, double weightDelta) {
+        Collector collector = collectorRepository.findById(collectorId)
+                .orElseThrow(() -> new BusinessRuleException("Collector not found: " + collectorId));
+        if (weightDelta >= 0) {
+            collector.addWorkload(weightDelta);
+        } else {
+            collector.removeWorkload(-weightDelta);
+        }
+        collectorRepository.update(collector);
     }
 }

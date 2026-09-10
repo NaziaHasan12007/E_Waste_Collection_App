@@ -1,6 +1,7 @@
 package com.ewaste.server.api.controller;
 
 import com.ewaste.server.api.dto.response.RewardSummaryResponse;
+import com.ewaste.server.api.dto.request.RedeemRewardRequest;
 import com.ewaste.server.application.service.RewardService;
 import com.ewaste.server.domain.model.reward.Reward;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,20 @@ public class RewardController {
                 null
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{userId}/redeem")
+    public ResponseEntity<RewardSummaryResponse> redeemPoints(@PathVariable Long userId,
+                                                               @RequestBody RedeemRewardRequest request) {
+        Reward reward = rewardService.redeemPoints(userId, request.getPoints());
+        return ResponseEntity.ok(new RewardSummaryResponse(
+                reward.getRewardId(),
+                reward.getUserId(),
+                reward.getPickupId(),
+                reward.getPoints(),
+                reward.getCalculationBasis(),
+                reward.getCreatedAt() != null ? reward.getCreatedAt().toString() : null
+        ));
     }
 
     @GetMapping("/{userId}/history")

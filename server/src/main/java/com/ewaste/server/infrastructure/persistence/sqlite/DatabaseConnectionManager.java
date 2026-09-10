@@ -1,25 +1,35 @@
 package com.ewaste.server.infrastructure.persistence.sqlite;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Component
 public class DatabaseConnectionManager {
 
-    private static final String DB_URL = "jdbc:sqlite:ewaste.db";
+    private final String dbUrl;
     private Connection connection;
 
-    public DatabaseConnectionManager() {
+    public DatabaseConnectionManager(@Value("${ewaste.db.path}") String databasePath) {
+        Path path = Path.of(databasePath).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(path.getParent());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create database directory: " + path.getParent(), e);
+        }
+        this.dbUrl = "jdbc:sqlite:" + path;
         initializeDatabase();
     }
 
     private void initializeDatabase() {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection(DB_URL);
+            connection = DriverManager.getConnection(dbUrl);
             enableForeignKeys();
             createTables();
         } catch (ClassNotFoundException e) {
@@ -44,7 +54,7 @@ public class DatabaseConnectionManager {
 
     public Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(DB_URL);
+            connection = DriverManager.getConnection(dbUrl);
             enableForeignKeys();
         }
         return connection;

@@ -4,6 +4,7 @@ import com.ewaste.server.api.dto.request.LoginRequestDto;
 import com.ewaste.server.api.dto.request.RegisterRequestDto;
 import com.ewaste.server.api.dto.response.AuthResponseDto;
 import com.ewaste.server.application.service.AuthService;
+import com.ewaste.server.common.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class AuthController {
             AuthResponseDto response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Login failed: " + e.getMessage());
+            throw new UnauthorizedException("Invalid email or password");
         }
     }
 

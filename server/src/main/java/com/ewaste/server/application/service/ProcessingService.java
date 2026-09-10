@@ -32,4 +32,8 @@ public class ProcessingService {
     public List<ProcessingRecord> findAll() {
         return processingRecordRepository.findAll();
     }
+
+    public List<ProcessingRecord> findByPickupId(Long pickupId) {
+        return processingRecordRepository.findByPickupId(pickupId);
+    }
 }

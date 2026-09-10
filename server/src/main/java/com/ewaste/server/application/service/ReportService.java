@@ -41,17 +41,24 @@ public class ReportService {
         // Total pickups
         metrics.totalPickups = pickupRequestRepository.findAll().size();
 
+        List<PickupRequest> processedPickups = pickupRequestRepository.findAll().stream()
+                .filter(p -> p.isProcessing() || p.isCompleted())
+                .toList();
+
         // Total items processed
-        metrics.totalItemsProcessed = eWasteItemRepository.findAll().size();
+        metrics.totalItemsProcessed = processedPickups.stream()
+                .mapToInt(p -> p.getItems() != null ? p.getItems().size() : 0)
+                .sum();
 
         // Total recycling points earned
         metrics.totalPointsEarned = rewardRepository.findAll().stream()
                 .mapToInt(reward -> reward.getPointsEarned())
                 .sum();
 
-        // Total weight recycled
-        metrics.totalWeightRecycled = eWasteItemRepository.findAll().stream()
-                .mapToDouble(item -> item.getWeightKg())
+        // Total weight recycled includes facility-processing and completed pickups,
+        // but excludes submitted, assigned, collected, and delivered-only pickups.
+        metrics.totalWeightRecycled = processedPickups.stream()
+                .mapToDouble(p -> eWasteItemRepository.calculateTotalWeightByPickupId(p.getPickupId()))
                 .sum();
 
         // Hazardous waste ratio

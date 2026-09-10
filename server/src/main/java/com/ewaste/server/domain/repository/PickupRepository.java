@@ -45,6 +45,13 @@ public interface PickupRepository {
      */
     List<PickupRequest> findByStatus(String status);
 
+    default Optional<PickupRequest> findByItemId(Long itemId) {
+        return findAll().stream()
+                .filter(pickup -> pickup.getItems() != null
+                        && pickup.getItems().stream().anyMatch(item -> itemId.equals(item.getItemId())))
+                .findFirst();
+    }
+
     /**
      * Find active pickups for a customer (not completed or cancelled)
      */
