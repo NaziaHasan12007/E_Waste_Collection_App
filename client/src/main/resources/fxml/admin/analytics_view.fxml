@@ -44,7 +44,7 @@
             <!-- KPI Metric Cards Grid -->
             <HBox spacing="16.0">
                 <VBox spacing="6.0" styleClass="card" HBox.hgrow="ALWAYS">
-                    <Label text="TOTAL DIVERSIION" styleClass="heading-2"/>
+                    <Label text="TOTAL DIVERSION" styleClass="heading-2"/>
                     <Label fx:id="totalVolumeLabel" text="0.0 kg" styleClass="metric-value"/>
                     <Label text="Total e-waste mass diverted from landfill" styleClass="subtext"/>
                 </VBox>
@@ -72,19 +72,19 @@
             <HBox spacing="18.0" VBox.vgrow="ALWAYS">
                 <!-- Pie Chart: Material Breakdown -->
                 <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
-                    <Label text="Electronic Waste Material Breakdown" styleClass="heading-2"/>
+                    <Label text="Processing Outcome Breakdown" styleClass="heading-2"/>
                     <PieChart fx:id="categoryDistributionChart" legendVisible="true" VBox.vgrow="ALWAYS"/>
                 </VBox>
 
                 <!-- Bar Chart: Facility Recovery Throughput -->
                 <VBox spacing="8.0" styleClass="card" HBox.hgrow="ALWAYS">
-                    <Label text="Certified Facility Throughput (Tonnage)" styleClass="heading-2"/>
+                    <Label text="Pickup Status Distribution" styleClass="heading-2"/>
                     <BarChart fx:id="facilityThroughputChart" legendVisible="false" VBox.vgrow="ALWAYS">
                         <xAxis>
-                            <CategoryAxis label="Facility Center ID / Zone"/>
+                            <CategoryAxis label="Pickup Status"/>
                         </xAxis>
                         <yAxis>
-                            <NumberAxis label="Weight Processed (kg)"/>
+                            <NumberAxis label="Pickup Count"/>
                         </yAxis>
                     </BarChart>
                 </VBox>
