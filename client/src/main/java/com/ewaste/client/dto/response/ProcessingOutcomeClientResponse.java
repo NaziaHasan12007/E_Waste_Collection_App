@@ -72,7 +72,7 @@ public class ProcessingOutcomeClientResponse {
 
     // ========== HELPER METHODS ==========
     public boolean isCompleted() {
-        return "COMPLETED".equals(processingStatus);
+        return "COMPLETED".equalsIgnoreCase(processingStatus);
     }
 
     public boolean isRejected() {

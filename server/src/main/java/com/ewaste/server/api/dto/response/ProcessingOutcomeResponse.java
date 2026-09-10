@@ -13,6 +13,7 @@ public class ProcessingOutcomeResponse {
     private String processingResult;
     private Integer pointsAwarded;
     private String processedAt;
+    private String processingStatus;
 
     public ProcessingOutcomeResponse() {}
 
@@ -91,5 +92,13 @@ public class ProcessingOutcomeResponse {
 
     public void setProcessedAt(String processedAt) {
         this.processedAt = processedAt;
+    }
+
+    public String getProcessingStatus() {
+        return processingStatus;
+    }
+
+    public void setProcessingStatus(String processingStatus) {
+        this.processingStatus = processingStatus;
     }
 }

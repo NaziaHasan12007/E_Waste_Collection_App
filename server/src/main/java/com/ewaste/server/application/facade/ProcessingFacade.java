@@ -110,6 +110,7 @@ public class ProcessingFacade {
         record.setInspectionNotes(request.getInspectionNotes());
         record.setProcessingResult(result);
         record.setProcessedAt(LocalDateTime.now());
+        record.complete();
 
         // 3. Calculate and apply reward points
         int points = calculatePoints(item, result);
@@ -117,16 +118,18 @@ public class ProcessingFacade {
 
         ProcessingRecord saved = processingService.saveRecord(record);
 
+        // Complete the pickup before issuing rewards so a successful reward
+        // always corresponds to a completed customer pickup.
+        pickup.process();
+        pickup.complete();
+        pickupRepository.update(pickup);
+
         rewardService.awardPoints(
                 pickup.getUserId(),
                 pickup.getPickupId(),
                 points,
                 "Processing outcome: " + result.name()
         );
-
-        pickup.process();
-        pickup.complete();
-        pickupRepository.update(pickup);
 
         // 4. Update recycling center capacity load
         center.setCurrentUtilizationKg(center.getCurrentUtilizationKg() + item.getWeightKg());

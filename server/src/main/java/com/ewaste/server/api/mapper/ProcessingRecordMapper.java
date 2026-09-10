@@ -21,6 +21,7 @@ public class ProcessingRecordMapper {
         dto.setProcessingResult(record.getProcessingResult() != null ? record.getProcessingResult().name() : null);
         dto.setPointsAwarded(record.getPointsAwarded() != null ? record.getPointsAwarded() : 0);
         dto.setProcessedAt(record.getProcessedAt() != null ? record.getProcessedAt().toString() : null);
+        dto.setProcessingStatus(record.getProcessingStatus());
 
         return dto;
     }
